@@ -134,6 +134,7 @@
   <div class="lead">
     <a class="chipcard" href="#demo"><b>▶ Prova la demo</b><br><span>5 passi, ~30 secondi</span></a>
     <a class="chipcard" href="/verify.html"><b>🔎 Verifica una ricevuta</b><br><span>controllala tu stesso</span></a>
+    <a class="chipcard" href="#dev"><b>⚙️ Per sviluppatori</b><br><span>mettilo nel tuo agente</span></a>
   </div>
   <div class="toolbar"><button class="ghost" id="btn-reset">↻ Ricomincia</button></div>
 </header>
@@ -290,6 +291,38 @@
   <p class="story"><b>Agent Passport risponde a questo:</b> un <b>mandato umano</b> verificabile +
   <b>revoca</b> in tempo reale + uno <b>scontrino</b> firmato sull'output. Non reinventa l'identità:
   aggiunge la parte che manca — <b>responsabilità e controllo</b>.</p>
+</section>
+
+<!-- PER SVILUPPATORI -->
+<section class="info" id="dev" style="margin-top:14px">
+  <h2>Per sviluppatori — mettilo nel tuo agente</h2>
+  <p class="story">Agent Passport non è un'app in cui fai login: è un <b>wrapper</b> attorno a ciò
+  che il tuo agente già produce. L'agente firma il suo output, <b>chiunque</b> lo verifica — e se
+  revochi il mandato, quell'output smette di valere all'istante. Funziona con Claude Code, Codex,
+  un tool MCP o un semplice script.</p>
+
+  <div class="flow" style="margin-top:14px">
+    <div class="box"><div class="ic">🆔</div><b>1 · Identità</b><span>una chiave = l'agente</span></div>
+    <div class="arr">→</div>
+    <div class="box"><div class="ic">📜</div><b>2 · Passaporto</b><span>l'umano firma una volta</span></div>
+    <div class="arr">→</div>
+    <div class="box"><div class="ic">🖊️</div><b>3 · Firma output</b><span>sign_receipt(...)</span></div>
+    <div class="arr">→</div>
+    <div class="box"><div class="ic">🛡️</div><b>4 · Gate</b><span>verify → accetta/rifiuta</span></div>
+  </div>
+
+  <label style="margin-top:14px">Lato agente + lato ricevente, 2 righe</label>
+  <pre style="margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+    padding:13px 14px;overflow-x:auto;font:13px/1.7 var(--mono);color:var(--txt)"># shell — l'agente firma, chiunque fa da gate (exit 1 = rifiuto)
+agent-passport sign report.md > report.md.receipt
+agent-passport verify report.md report.md.receipt --issuer $AP_ISSUER || exit 1
+
+# python — stesso flusso nel codice
+receipt = sign_receipt(output, AP_TOKEN, agent_key, scope="post:linkedin", mandate_id=mid)
+ok = verify_receipt(output, receipt, expected_issuer=ISSUER_DID).valid</pre>
+  <p class="note">Ricetta completa (hook <code>Stop</code> per Claude Code, esempio eseguibile,
+  pattern MCP/A2A) → <b>INTEGRATION.md</b> e <b>integrations/claude-code/</b> nel repo. Provalo
+  senza server: <code>uv run python examples/standalone.py</code>.</p>
 </section>
 
 <p class="foot">Tutto gira in locale, gratis. Vuoi controllare una ricevuta da solo?

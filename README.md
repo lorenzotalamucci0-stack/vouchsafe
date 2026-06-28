@@ -65,6 +65,7 @@ fetch HTTP all'endpoint di status dell'issuer.)*
 | 🔗 Catena di delega (sub-mandati più stretti) | [`delegate.py`](packages/python/agent_passport/delegate.py) | nel suite sopra |
 | 🌐 Demo web (passkey, revoca live, ricevuta, delega, `/verify.html`) | [`server`](server) | reale |
 | 🤖 E2E (WebAuthn virtual authenticator) | [`e2e`](e2e) | `node run.mjs` · `receipt.mjs` · `chain.mjs` |
+| ⚙️ **Integrazione** (CLI, hook Claude Code, esempi) | [`INTEGRATION.md`](INTEGRATION.md) · [`integrations/`](integrations/) · [`examples/`](examples/) | `python examples/standalone.py` |
 | 🚀 Integra in 5 minuti | [`QUICKSTART.md`](QUICKSTART.md) | — |
 
 > Sotto il cofano: W3C **Verifiable Credentials 2.0** come VC-JWT, **Ed25519/`did:key`**, e
