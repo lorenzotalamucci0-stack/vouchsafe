@@ -43,7 +43,7 @@ HERE = Path(__file__).parent
 STATIC = HERE / "static"
 KEYS_DIR = HERE / ".keys"
 DATA_DIR = HERE / ".data"
-RP_ID = "localhost"
+RP_ID = os.environ.get("AP_RP_ID", "localhost")
 BASE_URL = os.environ.get("AP_BASE_URL", "http://localhost:8000")
 
 
