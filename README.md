@@ -8,6 +8,10 @@ Un mandato porta **due firme**: la **passkey dell'umano** (WebAuthn — prova il
 l'**issuer** (Ed25519/`did:key`, VC-JWT). Un verifier controlla firma + scadenza + revoca + scope.
 Allineato a [W3C Verifiable Credentials 2.0](https://www.w3.org/TR/vc-data-model-2.0/).
 
+![Demo: mandato valido → revoca → rifiuto in tempo reale](docs/media/demo.gif)
+
+*Stesso agente, stesso token. Prima della revoca: ✓ azione eseguita. Dopo: ✗ rifiutata in tempo reale.*
+
 ## Cosa c'è qui (v1)
 
 | | Dove | Verifica |
@@ -24,10 +28,9 @@ Allineato a [W3C Verifiable Credentials 2.0](https://www.w3.org/TR/vc-data-model
 ```bash
 # 1. SDK + server
 cd packages/python && uv venv && uv pip install -e ".[server]"
-# 2. avvia
-cd ../../server && AP_BASE_URL=http://localhost:8000 \
-  ../packages/python/.venv/bin/python -m uvicorn app:app --port 8000
-# 3. apri http://localhost:8000
+# 2. avvia (sceglie la porta 8000 se libera, altrimenti la prima libera, e stampa l'URL)
+cd ../../server && ../packages/python/.venv/bin/python run.py
+# 3. apri l'URL stampato (es. http://localhost:8000)
 ```
 
 Crei un passaporto con la passkey → generi un mandato (scope + scadenza) per un agente →

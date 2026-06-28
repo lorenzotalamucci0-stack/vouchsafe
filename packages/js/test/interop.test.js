@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 import { verify, present, extractToken } from "../src/index.js";
+import { b64uDecode, b64uEncode, canonicalize } from "../src/jcs.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pyRoot = path.resolve(here, "../../python");
@@ -59,7 +60,9 @@ test("out-of-scope -> invalid", async () => {
 test("tampered issuer signature -> invalid", async () => {
   const fx = mint();
   const [h, p, s] = fx.token.split(".");
-  const tampered = `${h}.${p}.${s.slice(0, -2)}${s.slice(-2) === "AB" ? "CD" : "AB"}`;
+  const sig = b64uDecode(s);
+  sig[0] ^= 0x01;                       // flip a byte -> signature deterministically invalid
+  const tampered = `${h}.${p}.${b64uEncode(sig)}`;
   const result = await verify(tampered, { statusResolver: offlineStatus(false) });
   assert.equal(result.valid, false);
   assert.equal(result.reason, "issuerSignature");
@@ -67,4 +70,16 @@ test("tampered issuer signature -> invalid", async () => {
 
 test("present / extractToken round-trip", () => {
   assert.equal(extractToken(present("abc.def.ghi").Authorization), "abc.def.ghi");
+});
+
+test("JCS canonical bytes match the Python frozen vector (cross-language)", () => {
+  // Same object and expected string as packages/python tests/test_hardening.py::test_jcs_known_vector
+  const obj = { b: 2, a: "x", nested: { z: [1, 2, 3], emoji: "😀" } };
+  const expected = '{"a":"x","b":2,"nested":{"emoji":"😀","z":[1,2,3]}}';
+  assert.equal(new TextDecoder().decode(canonicalize(obj)), expected);
+});
+
+test("JCS rejects big ints and non-BMP keys", () => {
+  assert.throws(() => canonicalize({ n: Number.MAX_SAFE_INTEGER + 1 }));
+  assert.throws(() => canonicalize({ "\u{10000}": 1 }));
 });

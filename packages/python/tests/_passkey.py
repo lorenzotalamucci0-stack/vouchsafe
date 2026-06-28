@@ -31,7 +31,7 @@ class SoftwarePasskey:
         )
         return b64url(spki)
 
-    def sign_mandate(self, inner_mandate: dict, *, corrupt: bool = False) -> dict:
+    def sign_mandate(self, inner_mandate: dict, *, corrupt: bool = False, flags: bytes = b"\x05") -> dict:
         challenge = b64url(mandate_hash(inner_mandate))
         if corrupt:
             challenge = b64url(b"not-the-real-challenge-bytes-000")
@@ -41,7 +41,7 @@ class SoftwarePasskey:
         ).encode("utf-8")
 
         rp_id_hash = hashlib.sha256(self.rp_id.encode()).digest()
-        flags = b"\x05"  # UP (0x01) | UV (0x04)
+        # flags default 0x05 = UP (0x01) | UV (0x04); tests can pass 0x00 to omit User Present.
         sign_count = b"\x00\x00\x00\x00"
         authenticator_data = rp_id_hash + flags + sign_count
 

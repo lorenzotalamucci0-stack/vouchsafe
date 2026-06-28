@@ -62,6 +62,11 @@ RESOLVER = store_status_resolver(STORE)
 HUMANS: dict[str, dict] = {}      # humanId -> {credentialId, publicKey, alg}
 PENDING: dict[str, dict] = {}     # mandateId -> {inner, humanId}
 
+# An issuer enforces its own policy on what scopes it will grant. The demo uses a fixed
+# allowlist; a real issuer would resolve this per human/agent/organization.
+ALLOWED_SCOPES = {"read:calendar", "book:flights", "post:linkedin", "send:email"}
+MAX_TTL_SECONDS = 24 * 3600
+
 app = FastAPI(title="Agent Passport demo")
 
 
@@ -125,6 +130,12 @@ def register(body: RegisterBody):
 def mandate_challenge(body: ChallengeBody):
     if body.humanId not in HUMANS:
         return JSONResponse({"error": "unknown human; register a passkey first"}, status_code=400)
+    # Issuer policy: only grant scopes the issuer recognizes, and bound the lifetime.
+    unknown = [s for s in body.scope if s not in ALLOWED_SCOPES]
+    if not body.scope or unknown:
+        return JSONResponse({"error": f"unsupported scope(s): {unknown or 'empty'}"}, status_code=400)
+    if not (0 < body.ttlSeconds <= MAX_TTL_SECONDS):
+        return JSONResponse({"error": f"ttlSeconds must be in 1..{MAX_TTL_SECONDS}"}, status_code=400)
     # Mint a fresh did:key identity for the agent.
     agent_id = issuer_did(generate_issuer_key())
     inner = build_inner_mandate(
@@ -153,6 +164,9 @@ def mandate_issue(body: IssueBody):
     if pending is None:
         return JSONResponse({"error": "unknown or expired mandate challenge"}, status_code=400)
     human = HUMANS[pending["humanId"]]
+    # The assertion must come from the passkey this human registered.
+    if body.assertion.credentialId != human["credentialId"]:
+        return JSONResponse({"error": "credentialId does not match the registered passkey"}, status_code=400)
     human_proof = {
         "type": "WebAuthnAssertion2026",
         "credentialId": body.assertion.credentialId,
@@ -185,6 +199,9 @@ def status(raw_id: str):
 
 @app.post("/revoke")
 def revoke_mandate(body: RevokeBody):
+    # DEMO ONLY: unauthenticated so the "revoke" button just works. A production issuer
+    # MUST authenticate this — only the human who authorized the mandate (or the issuer
+    # admin) may revoke it — and should audit-log every revocation. See SPEC.md §Threat model.
     ok = revoke(body.mandateId, STORE)
     if not ok:
         return JSONResponse({"error": "unknown mandate"}, status_code=404)

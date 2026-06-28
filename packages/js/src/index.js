@@ -35,10 +35,34 @@ export async function issue(innerMandate, humanProof, { privateKey, issuerDid })
   return signCompactJws(payload, { alg: "EdDSA", typ: "vc+jwt", kid: issuerDid }, privateKey);
 }
 
-// Default revocation resolver: GET credentialStatus.id.
-async function httpStatusResolver(statusEntry) {
-  const res = await fetch(statusEntry.id);
-  return res.json();
+// Block obvious private/loopback literals (full DNS-rebinding defense needs a server-side resolver).
+function isPrivateHost(host) {
+  const h = host.toLowerCase().replace(/^\[|\]$/g, "");
+  if (h === "localhost" || h.endsWith(".localhost")) return true;
+  if (h === "::1" || h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;
+  const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (m) {
+    const [a, b] = [Number(m[1]), Number(m[2])];
+    if (a === 10 || a === 127 || (a === 169 && b === 254) || (a === 192 && b === 168) ||
+        (a === 172 && b >= 16 && b <= 31) || a === 0) return true;
+  }
+  return false;
+}
+
+// Default revocation resolver: GET credentialStatus.id. SSRF-hardened (https, no redirects,
+// timeout, private hosts blocked). credentialStatus.id is token-controlled, so pin the issuer.
+async function httpStatusResolver(statusEntry, { allowInsecure = false, timeoutMs = 5000 } = {}) {
+  const url = new URL(statusEntry.id);
+  if (url.protocol !== "https:" && !allowInsecure) throw new Error("status URL must be https (allowInsecure for local dev)");
+  if (!allowInsecure && isPrivateHost(url.hostname)) throw new Error("status host is private/loopback");
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { redirect: "error", signal: ctrl.signal });
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 export async function verify(token, opts = {}) {
@@ -67,11 +91,11 @@ export async function verify(token, opts = {}) {
     throw new Error(`cannot read token: ${e.message}`);
   }
 
-  // 1. Issuer signature.
+  // 1. Issuer signature (alg pinned to EdDSA; kid must match the issuer DID).
   let payload;
   try {
     const res = await verifyCompactJws(token, rawPub);
-    checks.issuerSignature = res.ok;
+    checks.issuerSignature = res.ok && (res.header.kid === undefined || res.header.kid === issuerDid);
     payload = res.payload;
   } catch (e) {
     throw new Error(`invalid token: ${e.message}`);

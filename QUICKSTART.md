@@ -6,8 +6,8 @@ Three integration points. Pick the one you are: **verifier** (you receive agent 
 > Everything runs locally. Start the demo server first:
 > ```bash
 > cd packages/python && uv venv && uv pip install -e ".[server]"
-> cd ../../server && uv run --project ../packages/python uvicorn app:app --port 8000
-> # open http://localhost:8000
+> cd ../../server && ../packages/python/.venv/bin/python run.py
+> # run.py picks port 8000 (or the next free one) and prints the URL to open.
 > ```
 
 ---

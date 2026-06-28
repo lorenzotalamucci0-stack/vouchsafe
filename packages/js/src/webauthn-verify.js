@@ -7,21 +7,39 @@ const EDDSA = -8;
 const RS256 = -257;
 
 // WebAuthn ES256 signatures are ASN.1 DER; WebCrypto ECDSA wants raw r||s (P1363).
+// Strict parse: validate the SEQUENCE length consumes exactly the buffer, INTEGERs use
+// minimal encoding, r/s fit in 32 bytes, and there is no trailing data.
 function derToRaw(der) {
   let offset = 0;
+  const readLen = () => {
+    let len = der[offset++];
+    if (len & 0x80) {
+      const n = len & 0x7f;
+      if (n === 0 || n > 2) throw new Error("bad DER: unsupported length form");
+      len = 0;
+      for (let i = 0; i < n; i++) len = (len << 8) | der[offset++];
+    }
+    return len;
+  };
   if (der[offset++] !== 0x30) throw new Error("bad DER: no SEQUENCE");
-  if (der[offset] & 0x80) offset += 1 + (der[offset] & 0x7f); // long-form length
-  else offset += 1;
+  const seqLen = readLen();
+  if (offset + seqLen !== der.length) throw new Error("bad DER: SEQUENCE length mismatch / trailing data");
   const readInt = () => {
     if (der[offset++] !== 0x02) throw new Error("bad DER: no INTEGER");
-    let len = der[offset++];
+    const len = readLen();
     let val = der.slice(offset, offset + len);
     offset += len;
-    while (val.length > 0 && val[0] === 0x00) val = val.slice(1); // strip sign padding
+    if (val.length === 0) throw new Error("bad DER: empty INTEGER");
+    // Minimal encoding: a leading 0x00 is only allowed to clear a high sign bit.
+    if (val.length > 1 && val[0] === 0x00 && (val[1] & 0x80) === 0) throw new Error("bad DER: non-minimal INTEGER");
+    if (val[0] & 0x80) throw new Error("bad DER: negative INTEGER");
+    if (val.length > 1 && val[0] === 0x00) val = val.slice(1);
+    if (val.length > 32) throw new Error("bad DER: INTEGER too large for P-256");
     return val;
   };
   const r = readInt();
   const s = readInt();
+  if (offset !== der.length) throw new Error("bad DER: trailing data after INTEGERs");
   const out = new Uint8Array(64);
   out.set(r, 32 - r.length);
   out.set(s, 64 - s.length);
@@ -63,6 +81,10 @@ export async function verifyHumanProof(inner, humanProof) {
     return { ok: false, reason: "invalid clientDataJSON" };
   }
   if (clientData.type !== "webauthn.get") return { ok: false, reason: "clientDataJSON.type is not webauthn.get" };
+
+  // authenticatorData: rpIdHash(32) | flags(1) | signCount(4). Require User Present (UP, bit 0).
+  if (authenticatorData.length < 37) return { ok: false, reason: "authenticatorData too short" };
+  if ((authenticatorData[32] & 0x01) === 0) return { ok: false, reason: "User Present flag not set" };
 
   const expected = b64uEncode(await mandateHash(inner));
   if (clientData.challenge !== expected) return { ok: false, reason: "challenge does not match mandate hash" };

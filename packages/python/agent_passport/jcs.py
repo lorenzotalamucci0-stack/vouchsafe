@@ -14,20 +14,40 @@ import json
 from typing import Any
 
 
-def _reject_floats(value: Any) -> None:
+# Restricted JSON profile (I-JSON-like) so Python and JS produce identical bytes:
+#  - no floats (number-canonicalization would diverge),
+#  - integers only within the IEEE-754 safe range (JS Number can't represent more
+#    without switching to exponential notation, breaking the cross-language hash),
+#  - object KEYS must stay within the Basic Multilingual Plane (Python sorts keys by
+#    Unicode code point, JS String#sort by UTF-16 code unit — they agree only inside
+#    the BMP). String VALUES may be any Unicode (both emit identical UTF-8).
+_MAX_SAFE_INT = 2**53 - 1
+
+
+def _check_json(value: Any) -> None:
+    if isinstance(value, bool):
+        return
     if isinstance(value, float):
         raise ValueError("floats are not allowed in a canonical mandate (use integers/strings)")
+    if isinstance(value, int):
+        if abs(value) > _MAX_SAFE_INT:
+            raise ValueError("integers must be within the IEEE-754 safe range for cross-language hashing")
+        return
     if isinstance(value, dict):
-        for v in value.values():
-            _reject_floats(v)
+        for k, v in value.items():
+            if not isinstance(k, str):
+                raise ValueError("object keys must be strings")
+            if any(ord(ch) > 0xFFFF for ch in k):
+                raise ValueError("object keys must stay within the Basic Multilingual Plane")
+            _check_json(v)
     elif isinstance(value, (list, tuple)):
         for v in value:
-            _reject_floats(v)
+            _check_json(v)
 
 
 def canonicalize(obj: Any) -> bytes:
-    """Return the canonical UTF-8 JSON encoding of ``obj``."""
-    _reject_floats(obj)
+    """Return the canonical UTF-8 JSON encoding of ``obj`` (restricted JSON profile)."""
+    _check_json(obj)
     return json.dumps(
         obj,
         sort_keys=True,

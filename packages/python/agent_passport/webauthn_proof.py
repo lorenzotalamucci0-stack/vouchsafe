@@ -80,6 +80,12 @@ def verify_human_proof(inner_mandate: dict, human_proof: dict) -> ProofResult:
     if client_data.get("type") != "webauthn.get":
         return ProofResult(False, "clientDataJSON.type is not webauthn.get")
 
+    # authenticatorData: rpIdHash(32) | flags(1) | signCount(4). Require User Present (UP, bit 0).
+    if len(authenticator_data) < 37:
+        return ProofResult(False, "authenticatorData too short")
+    if not (authenticator_data[32] & 0x01):
+        return ProofResult(False, "User Present flag not set")
+
     expected_challenge = b64url(mandate_hash(inner_mandate))
     if client_data.get("challenge") != expected_challenge:
         return ProofResult(False, "challenge does not match mandate hash")

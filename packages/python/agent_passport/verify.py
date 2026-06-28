@@ -66,7 +66,12 @@ def verify(
             algorithms=["EdDSA"],
             options={"verify_exp": False, "verify_nbf": False, "verify_aud": False},
         )
-        checks["issuerSignature"] = True
+        header = jwt.get_unverified_header(token)
+        # kid, when present, must name the same issuer DID whose key we verified with.
+        kid_ok = header.get("kid") in (None, issuer_did_str)
+        checks["issuerSignature"] = kid_ok
+        if not kid_ok:
+            return _finalize({"issuerSignature": False})
     except (jwt.InvalidSignatureError, InvalidSignature):
         return _finalize({"issuerSignature": False})
     except jwt.PyJWTError as exc:

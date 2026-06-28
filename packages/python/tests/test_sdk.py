@@ -104,10 +104,13 @@ def test_tampered_signature(issuer_key, passkey, tmp_path):
     token = issue(inner, proof, issuer_key)
     _, resolver = _store_with(inner, tmp_path)
 
-    # Flip characters in the JWT signature segment -> issuer signature breaks.
+    # Flip a byte inside the decoded signature -> issuer signature breaks deterministically.
+    from agent_passport.jcs import b64url, b64url_decode
+
     head, payload, sig = token.split(".")
-    sig = sig[:-2] + ("AB" if sig[-2:] != "AB" else "CD")
-    tampered = f"{head}.{payload}.{sig}"
+    sig_bytes = bytearray(b64url_decode(sig))
+    sig_bytes[0] ^= 0x01
+    tampered = f"{head}.{payload}.{b64url(bytes(sig_bytes))}"
 
     result = verify(tampered, status_resolver=resolver)
     assert result.valid is False

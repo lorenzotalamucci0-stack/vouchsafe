@@ -12,13 +12,17 @@ export async function importPrivateKeyPkcs8(pkcs8) {
 
 // Verify a compact JWS (header.payload.signature) with an Ed25519 raw public key.
 export async function verifyCompactJws(token, rawPublicKey) {
-  const [h, p, s] = token.split(".");
-  if (!h || !p || !s) throw new Error("malformed JWT");
+  const parts = token.split(".");
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) throw new Error("malformed JWT");
+  const [h, p, s] = parts;
+  const header = JSON.parse(new TextDecoder().decode(b64uDecode(h)));
+  // Reject anything but EdDSA — never let the token pick a weaker/none algorithm.
+  if (header.alg !== "EdDSA") return { ok: false, header, payload: null };
   const key = await importPublicKey(rawPublicKey);
   const signed = new TextEncoder().encode(`${h}.${p}`);
   const sig = b64uDecode(s);
   const ok = await crypto.subtle.verify({ name: "Ed25519" }, key, sig, signed);
-  return { ok, header: JSON.parse(new TextDecoder().decode(b64uDecode(h))), payload: JSON.parse(new TextDecoder().decode(b64uDecode(p))) };
+  return { ok, header, payload: JSON.parse(new TextDecoder().decode(b64uDecode(p))) };
 }
 
 // Sign a payload as a compact EdDSA JWS (Node issuer side).

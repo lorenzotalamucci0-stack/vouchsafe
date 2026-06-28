@@ -158,7 +158,49 @@ A conformant verifier returns:
 `valid` is the AND of all performed checks. If any check fails, `valid=false` and `reason` names
 the first failure.
 
-## 10. Security considerations
+## 10. Threat model
+
+### What a verified mandate DOES guarantee
+- **Human authorization of this exact mandate.** A WebAuthn private key controlled by a human
+  signed `SHA-256(JCS(inner mandate))`. The agent cannot alter scope, expiry or subject without
+  invalidating the human proof.
+- **Issuer attestation.** A specific issuer (`did:key`) signed the credential and stands behind its
+  revocation endpoint. With issuer pinning, the verifier knows *which* issuer.
+- **Bounded authority.** The action is within an explicit `scope`, the mandate is within
+  `[validFrom, validUntil]`, and it has not been revoked at check time.
+- **Tamper evidence.** Any change to the token breaks the issuer signature; any change to the
+  mandate body breaks the human proof.
+
+### What it does NOT guarantee (by design)
+- **Not proof-of-personhood / uniqueness.** It proves *a* human authorized the agent, not *which*
+  human, nor that they are unique. **Non-transferability is unsolved:** a human can lend or rent
+  their passkey. We provide *mandate + scope + revocation* (accountability), **not** a uniqueness
+  proof. Proof-of-personhood is inherited from an external root (World ID, etc.), never minted here.
+- **WebAuthn is used for signing, not session auth.** The assertion authenticates *a mandate*, not
+  a login. Consequently the verifier checks the challenge binding, signature, and User-Present flag,
+  but **deliberately does not pin `origin` / `rpIdHash`** — the credential is meant to be portable
+  and verifiable by any party, not tied to one Relying Party. A verifier that wants RP-binding must
+  add `expectedOrigin` / `expectedRpId` checks on top. Verifiers MUST re-derive the challenge from
+  the mandate and never trust the embedded `challenge` blindly.
+- **Bearer token / replay.** A leaked token is usable until it expires or is revoked. Verifiers
+  needing per-action freshness MUST add a nonce or transaction binding at the application layer
+  (reserved for v2).
+
+### Operational requirements for deployers
+- **Revocation must be authenticated.** The revoke action MUST be authorized — only the human who
+  authorized the mandate (or the issuer admin) may revoke it — and SHOULD be audit-logged. *The
+  reference demo server leaves `/revoke` open purely to keep the demo one-click; do not copy that.*
+- **Pin the issuer, or harden status fetching.** `credentialStatus.id` is taken from the
+  (only signature-verified) token. A verifier that does not pin `expected_issuer` and blindly
+  fetches that URL is exposed to SSRF. The SDK's default resolver mitigates this (HTTPS-only, no
+  redirects, blocks private/loopback/link-local hosts), but production verifiers SHOULD pin trusted
+  issuers and resolve status through an allowlisted path.
+- **Issuer scope policy.** An issuer SHOULD constrain grantable `scope` per human/agent/org rather
+  than echoing client input.
+- **Protect the issuer key.** It is the issuance trust anchor. Compromise lets an attacker mint
+  mandates, but **not** forge the human proof of an uncompromised human.
+
+## 11. Security considerations
 
 - **WebAuthn-as-signing** is used outside its canonical session-auth intent. Verifiers MUST
   re-derive and compare the challenge to the mandate hash — never trust the embedded challenge blindly.
@@ -171,7 +213,7 @@ the first failure.
 - **Issuer key** is the issuance trust anchor; protect it. Compromise allows minting mandates but
   not forging the human proof.
 
-## 11. Versioning
+## 12. Versioning
 
 This document is `v1`. Breaking changes bump the `https://agentpassport.dev/vN` context URL and the
 `AgentMandate` type. Verifiers MUST reject contexts/types they do not understand.
