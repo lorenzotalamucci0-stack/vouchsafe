@@ -58,6 +58,22 @@ def test_cli_sign_then_verify(tmp_path, passport, capsys):
     assert bad.value.code == 1
 
 
+def test_cli_sign_missing_file_exits(tmp_path, passport):
+    (tmp_path / "agent.pem").write_bytes(issuer_key_to_pem(passport.agent_key))
+    (tmp_path / "t.jwt").write_text(passport.token)
+    with pytest.raises(SystemExit):  # clean exit, not a traceback (matters in an unattended hook)
+        main(["sign", str(tmp_path / "nope.txt"),
+              "--token", str(tmp_path / "t.jwt"), "--key", str(tmp_path / "agent.pem")])
+
+
+def test_cli_sign_malformed_token_exits(tmp_path, passport):
+    (tmp_path / "agent.pem").write_bytes(issuer_key_to_pem(passport.agent_key))
+    (tmp_path / "d.txt").write_text("x")
+    with pytest.raises(SystemExit):
+        main(["sign", str(tmp_path / "d.txt"),
+              "--token", "not-a-jwt", "--key", str(tmp_path / "agent.pem")])
+
+
 def test_cli_sign_rejects_key_token_mismatch(tmp_path, passport):
     from agent_passport.keys import generate_issuer_key
     wrong = generate_issuer_key()

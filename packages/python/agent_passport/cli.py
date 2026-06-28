@@ -35,18 +35,32 @@ def _load_key(path: str | None):
         sys.exit(f"error: cannot read agent key: {exc}")
 
 
+def _read(path: str, mode: str = "r") -> bytes | str:
+    try:
+        with open(path, mode) as fh:
+            return fh.read()
+    except OSError as exc:
+        sys.exit(f"error: cannot read {path!r}: {exc}")
+
+
 def _load_token(arg: str | None) -> str:
     token = arg or os.environ.get("AP_TOKEN")
     if not token:
         sys.exit("error: passport token required (--token or AP_TOKEN=<jwt>)")
-    # Allow passing a path to a token file as well as the raw JWT.
+    # A raw JWT contains dots and never matches a real path; a path is read from disk.
     if os.path.exists(token):
-        token = open(token).read().strip()
+        token = _read(token).strip()
     return token
 
 
 def _unverified_vc(token: str) -> dict:
-    return jwt.decode(token, options={"verify_signature": False})["vc"]
+    try:
+        vc = jwt.decode(token, options={"verify_signature": False}).get("vc")
+    except Exception as exc:
+        sys.exit(f"error: cannot parse passport token: {exc}")
+    if not isinstance(vc, dict) or not vc.get("id") or "credentialSubject" not in vc:
+        sys.exit("error: not a valid passport token (malformed or wrong file)")
+    return vc
 
 
 def cmd_keygen(args) -> None:
@@ -77,7 +91,7 @@ def cmd_sign(args) -> None:
         sys.exit("error: token has no scope; pass --scope")
     if scope not in scopes:
         sys.exit(f"error: --scope {scope!r} is not granted by this passport ({scopes})")
-    output_bytes = open(args.file, "rb").read()
+    output_bytes = _read(args.file, "rb")
     receipt = sign_receipt(output_bytes, token, key, scope=scope, mandate_id=vc["id"])
     if args.out:
         with open(args.out, "w") as fh:
@@ -87,10 +101,10 @@ def cmd_sign(args) -> None:
 
 
 def cmd_verify(args) -> None:
-    output_bytes = open(args.file, "rb").read()
+    output_bytes = _read(args.file, "rb")
     receipt = args.receipt
     if os.path.exists(receipt):
-        receipt = open(receipt).read().strip()
+        receipt = _read(receipt).strip()
     result = verify_receipt(
         output_bytes, receipt,
         expected_issuer=args.issuer,

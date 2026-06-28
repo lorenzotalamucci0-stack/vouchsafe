@@ -24,25 +24,29 @@ was authorized, and reject it the instant you revoke.
 
 ## Wire it as a Claude Code hook
 
-A `Stop` hook signs the agent's deliverable automatically when the sub-agent finishes. In
-`.claude/settings.json` of the agent's workspace:
+A `Stop` hook signs the agent's deliverable automatically when the sub-agent finishes. It calls
+the shipped [`sign_deliverable.sh`](sign_deliverable.sh) (which quotes defensively) rather than
+inlining the variable into the command string. In `.claude/settings.json` of the agent's workspace:
 
 ```json
 {
   "hooks": {
     "Stop": [
       { "matcher": "*", "hooks": [
-        { "type": "command", "command": "agent-passport sign \"$AP_DELIVERABLE\" --out \"$AP_DELIVERABLE.receipt\"" }
+        { "type": "command", "command": "sh integrations/claude-code/sign_deliverable.sh" }
       ] }
     ]
   }
 }
 ```
 
-The agent (or your orchestrator) sets `AP_DELIVERABLE` to the file it produced. The consuming
-side — another agent, a merge gate, a human — runs `agent-passport verify`. Revoke the mandate in
-the issuer and **every** receipt under it stops verifying, live. That is the "what's it for":
-agent-to-agent output you can switch off without redeploying anything.
+> **Security:** the hook runs unattended on `Stop`. Your orchestrator sets `AP_DELIVERABLE` to the
+> file the agent produced — it MUST be a trusted path, **never raw model output** (treat it like a
+> filename you'd hand to `rm`). Do not inline an agent-chosen value into a shell command.
+
+The consuming side — another agent, a merge gate, a human — runs `agent-passport verify`. Revoke
+the mandate in the issuer and **every** receipt under it stops verifying, live. That is the
+"what's it for": agent-to-agent output you can switch off without redeploying anything.
 
 ## See it run (no server, no passkey needed)
 

@@ -16,7 +16,7 @@ from agent_passport.receipt import sign_receipt
 
 def gate(deliverable: Path, receipt: Path, *, issuer, resolver) -> bool:
     """What `agent-passport verify` does: accept only a live, in-scope, authorized output."""
-    result = verify_receipt(deliverable.read_bytes(), receipt.read_text(),
+    result = verify_receipt(deliverable.read_bytes(), receipt.read_text(encoding="ascii"),
                             expected_issuer=issuer, status_resolver=resolver)
     print(f"  gate: {'ACCEPT' if result.valid else 'REJECT (' + str(result.reason) + ')'}  {deliverable.name}")
     return result.valid
