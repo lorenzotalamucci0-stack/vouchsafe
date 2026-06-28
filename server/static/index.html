@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vouchsafe — lo scontrino revocabile per i contenuti AI</title>
+<meta name="description" content="Un umano autorizza un agente AI con la passkey; ogni output porta una prova firmata; se revochi, la prova smette di valere all'istante. Open source, Apache-2.0." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Vouchsafe — lo scontrino revocabile per i contenuti AI" />
+<meta property="og:description" content="Autorizza un agente con la passkey, ogni output porta uno scontrino firmato, revoca e muore all'istante. Il layer di accountability che C2PA/Art.50 non hanno." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b8cff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 4v5c0 4-3 7-7 8-4-1-7-4-7-8V7z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E" />
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#141925; --panel2:#0e1320; --line:#222a3a; --txt:#e6e9f0; --mut:#93a0b4;
+    --acc:#5b8cff; --ok:#34d399; --bad:#f87171; --warn:#fbbf24; --okbg:rgba(52,211,153,.12); --badbg:rgba(248,113,113,.12);
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:radial-gradient(1100px 480px at 50% -120px,#121a2e 0%,var(--bg) 70%);
+    color:var(--txt);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 20px 64px}
+  .brand{display:inline-flex;align-items:baseline;gap:0;text-decoration:none;color:var(--txt)}
+  header h1{margin:0;font-size:30px;letter-spacing:-.02em;font-weight:800}
+  header h1 .tag{color:var(--acc)}
+  .what{font-size:18px;margin:12px 0 2px}
+  .why{color:var(--mut);margin:2px 0 0}
+  .lead{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+  .lead a{flex:1;min-width:220px;text-decoration:none}
+  .chipcard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;color:var(--txt);transition:border-color .15s,transform .15s}
+  .chipcard:hover{border-color:var(--acc);transform:translateY(-1px)}
+  .chipcard b{color:var(--acc)} .chipcard span{color:var(--mut);font-size:13.5px}
+  .toolbar{display:flex;justify-content:flex-end;margin:14px 0 0}
+  main{display:grid;gap:14px;margin-top:8px}
+  .step,.info{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .step h2{margin:0;font-size:17px;display:flex;align-items:center;gap:10px;font-weight:700}
+  .num{flex:none;display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;
+    background:linear-gradient(180deg,#243150,#1a2336);color:#fff;font:700 14px/1 system-ui}
+  .desc{margin:8px 0 14px;color:var(--mut);font-size:14.5px}
+  label{display:block;font-size:13px;color:var(--mut);margin:12px 0 5px}
+  input[type=text],input[type=number],select,textarea{width:100%;max-width:100%;background:var(--panel2);
+    border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 12px;font:14px var(--mono)}
+  textarea{resize:vertical;line-height:1.45;word-break:break-all}
+  .scopes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chk{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+    padding:8px 11px;border-radius:10px;font:13px var(--mono);cursor:pointer;user-select:none}
+  .chk input{accent-color:var(--acc);width:16px;height:16px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+  .row>div{flex:1;min-width:150px}
+  button{appearance:none;border:1px solid transparent;background:var(--acc);color:#fff;
+    font:600 15px system-ui;padding:12px 18px;border-radius:11px;cursor:pointer;margin-top:16px;
+    transition:filter .15s,opacity .15s}
+  button:hover:not(:disabled){filter:brightness(1.08)}
+  button.ghost{background:transparent;border-color:var(--line);color:var(--txt);font-size:13.5px;padding:8px 13px;margin-top:0}
+  button.danger{background:var(--bad)} button.mini{font-size:12px;padding:6px 10px;margin:0}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  /* "?" help toggles + inline tips */
+  .q{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel2);color:var(--mut);font:700 11px/1 system-ui;cursor:pointer;flex:none;margin:0;padding:0;vertical-align:middle}
+  .q:hover{color:var(--acc);border-color:var(--acc)}
+  .step h2 .q{margin-left:auto}            /* push the "?" to the row end so titles align */
+  :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
+  .lock{margin:8px 0 0;color:var(--mut);font-size:13px;display:flex;align-items:center;gap:6px}
+  .lock[hidden]{display:none}
+  .tip{margin:8px 0 0;padding:9px 12px;background:var(--panel2);border:1px dashed var(--line);
+    border-radius:9px;color:var(--mut);font-size:13px}
+  .tip[hidden]{display:none}
+  /* "Come funziona" */
+  .info h2{margin:0;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .story{margin:12px 0 0;font-size:14.5px}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:14px 0 2px}
+  .flow .box{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+    padding:11px 12px;text-align:center}
+  .flow .box .ic{font-size:22px} .flow .box b{display:block;font-size:13.5px;margin-top:3px}
+  .flow .box span{color:var(--mut);font-size:12px}
+  .flow .arr{display:grid;place-items:center;color:var(--mut);font-size:20px;flex:none;width:18px}
+  @media (max-width:560px){ .flow .arr{transform:rotate(90deg);width:auto;height:14px} .flow .box{min-width:44%} }
+  .usecards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .uc{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .uc .ic{font-size:22px} .uc b{display:block;margin:4px 0 4px} .uc p{margin:0;color:var(--mut);font-size:13px}
+  .facts{margin:10px 0 0;padding-left:20px;display:grid;gap:7px} .facts li{font-size:14px}
+  @media (max-width:560px){ .usecards{grid-template-columns:1fr} }
+  /* output cards + verdicts */
+  .out{margin-top:14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
+    padding:14px 15px;opacity:0;max-height:0;overflow:hidden;transition:opacity .2s ease;font-size:14px}
+  .out.show{opacity:1;max-height:none;overflow:visible}
+  .verdict{display:flex;align-items:center;gap:12px;font:800 19px/1.2 system-ui;margin:0}
+  .verdict .ico{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:22px}
+  .verdict.ok{color:var(--ok)} .verdict.ok .ico{background:var(--okbg)}
+  .verdict.bad{color:var(--bad)} .verdict.bad .ico{background:var(--badbg)}
+  .out.ok{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,var(--okbg),transparent)}
+  .out.bad{border-color:rgba(248,113,113,.45);background:linear-gradient(180deg,var(--badbg),transparent)}
+  .saidline{margin:10px 0 0;font-size:14.5px}
+  .checks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:4px}
+  .checks{padding:0} .checks>li{list-style:none}
+  .checks .ck{display:flex;align-items:center;gap:9px;font-size:13.5px}
+  .checks .mark{flex:none;width:20px;text-align:center;font-weight:700}
+  .checks .y .mark{color:var(--ok)} .checks .n .mark{color:var(--bad)} .checks .skip{color:var(--mut)}
+  .checks .skip .mark{color:var(--mut)}
+  .checks .why{margin:0 0 4px 29px;color:var(--mut);font-size:12.5px}
+  .checks .why[hidden]{display:none}
+  /* decoded panel */
+  .decode{margin-top:12px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);overflow:hidden}
+  .decode summary{cursor:pointer;padding:11px 14px;font-weight:600;font-size:13.5px;list-style:none}
+  .decode summary::-webkit-details-marker{display:none}
+  .decode summary::before{content:"▸ ";color:var(--acc)}
+  .decode[open] summary::before{content:"▾ "}
+  .kv{padding:4px 14px 14px} .kv div{display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .kv div:first-child{border-top:0} .kv .k{color:var(--mut);min-width:120px} .kv .v{word-break:break-word}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font:700 12px var(--mono)}
+  .badge.ok{background:var(--okbg);color:var(--ok)} .badge.bad{background:var(--badbg);color:var(--bad)}
+  .badge.warn{background:rgba(251,191,36,.14);color:var(--warn)}
+  .tokrow{display:flex;align-items:center;gap:8px;margin-top:10px;font:12px var(--mono);color:var(--mut)}
+  .tokrow code{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:3px 7px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:58%}
+  .copy{cursor:pointer;color:var(--acc);font:600 12px system-ui;border:1px solid var(--line);border-radius:7px;padding:3px 9px;background:transparent}
+  .note{color:var(--mut);font-size:13px;margin-top:6px}
+  .hbadge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut);
+    background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  .hbadge i{font-style:normal;font-size:13px}
+  .foot{margin-top:22px;color:var(--mut);font-size:13px;text-align:center}
+  .foot a{color:var(--acc)} .foot .sep{opacity:.5;margin:0 8px}
+  a{color:var(--acc)}
+  /* session history */
+  #history div.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
+  #history div.hrow:first-child{border-top:0}
+  #history .hscope{flex:1;min-width:120px} #history .hid{font:12px var(--mono);color:var(--mut)}
+  @media (max-width:560px){
+    .wrap{padding:20px 14px 48px} header h1{font-size:25px} .what{font-size:16px}
+    .step,.info{padding:15px 15px;border-radius:14px} .verdict{font-size:17px} .tokrow code{max-width:46%}
+  }
+  /* developer docs */
+  .dev h3{font-size:15px;font-weight:700;margin:24px 0 8px;color:var(--txt);display:flex;align-items:center;gap:8px}
+  .dev h3 .ic{font-size:18px}
+  .dev p{font-size:14.5px;margin:8px 0}
+  .dev .code{margin:8px 0 0;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+    padding:13px 14px;overflow-x:auto;font:12.5px/1.7 var(--mono);color:var(--txt);white-space:pre}
+  .dev .code .c{color:var(--mut)}
+  .dev .tbl{overflow-x:auto;margin:8px 0 0}
+  .dev table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:440px}
+  .dev th,.dev td{text-align:left;padding:8px 9px;border-top:1px solid var(--line);vertical-align:top}
+  .dev th{color:var(--mut);font-weight:600}
+  .dev :not(pre)>code{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font:12.5px var(--mono)}
+  .dev .ckrow{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .dev .ckrow:first-child{border-top:0}
+  .dev .ckname{flex:none;min-width:140px;font:12.5px var(--mono);color:var(--acc)}
+  @media (max-width:560px){ .dev .ckrow{flex-direction:column;gap:2px} .dev .ckname{min-width:0} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="/"><h1>Vouch<span class="tag">safe</span></h1></a>
+  <p class="what"><b>Lo scontrino revocabile per i contenuti AI.</b></p>
+  <p class="why">Un umano autorizza un agente con la <b>passkey</b>; ogni output porta una <b>prova
+  firmata</b>; e se revochi, la prova <b>smette di valere all'istante</b>.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">
+    <span class="hbadge"><i>🔓</i> Open source · Apache-2.0</span>
+    <span class="hbadge"><i>🧩</i> SDK Python + JS</span>
+    <span class="hbadge"><i>🪶</i> Zero infrastruttura</span>
+    <span class="hbadge"><i>🔑</i> WebAuthn · Ed25519</span>
+  </div>
+
+  <div class="lead">
+    <a class="chipcard" href="#demo"><b>▶ Prova la demo</b><br><span>5 passi, ~30 secondi</span></a>
+    <a class="chipcard" href="/verify.html"><b>🔎 Verifica una ricevuta</b><br><span>controllala tu stesso</span></a>
+    <a class="chipcard" href="#dev"><b>⚙️ Per sviluppatori</b><br><span>mettilo nel tuo agente</span></a>
+  </div>
+  <div class="toolbar"><button class="ghost" id="btn-reset">↻ Ricomincia</button></div>
+</header>
+
+<!-- COME FUNZIONA -->
+<section class="info" id="info">
+  <h2>Come funziona <span style="font-weight:400;font-size:13px">(30 secondi)</span>
+    <button class="ghost mini" id="btn-info-toggle">nascondi</button></h2>
+  <div id="info-body">
+    <p class="story">Dai al tuo assistente AI il permesso di <b>prenotarti i voli</b>, per
+    <b>5 minuti</b>. Lui prenota. Poi cambi idea e <b>revochi</b>: da quel momento non può più —
+    e <b>chiunque</b> può controllare cosa ha fatto e con quale permesso. Niente password: firmi con
+    l'impronta del telefono.</p>
+    <div class="flow">
+      <div class="box"><div class="ic">🔑</div><b>Persona</b><span>firma il permesso</span></div>
+      <div class="arr">→</div>
+      <div class="box"><div class="ic">📜</div><b>Mandato</b><span>cosa · per quanto</span></div>
+      <div class="arr">→</div>
+      <div class="box"><div class="ic">🤖</div><b>Agente</b><span>agisce + scontrino</span></div>
+      <div class="arr">→</div>
+      <div class="box"><div class="ic">⛔</div><b>Revoca</b><span>spegni quando vuoi</span></div>
+    </div>
+  </div>
+</section>
+
+<main id="demo">
+
+  <section class="step">
+    <h2><span class="num">1</span> Crea il tuo passaporto <button class="q" data-tip="tip-1">?</button></h2>
+    <p class="tip" id="tip-1" hidden>Una <b>passkey</b> è la chiave del tuo dispositivo (impronta o volto).
+      Qui diventa la tua firma: prova che dietro c'è una persona vera, non un altro bot.</p>
+    <p class="desc">Usi l'impronta o il volto del tuo dispositivo come firma. Niente password, niente
+    dati che escono: la chiave resta nel telefono.</p>
+    <button id="btn-register">🔑 Crea passaporto</button>
+    <div id="out-register" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span> Dai un incarico all'agente <button class="q" data-tip="tip-2">?</button></h2>
+    <p class="tip" id="tip-2" hidden>Il <b>mandato</b> è il permesso firmato: dice <b>cosa</b> può fare
+      l'agente e <b>fino a quando</b>. Lo firmi tu con la passkey — nessun altro può crearlo al posto tuo.</p>
+    <p class="desc">Scegli <b>cosa</b> può fare l'agente (i permessi) e <b>per quanto</b> tempo.
+    Poi <b>firmi</b> l'incarico con la tua passkey: questo è il <b>mandato</b>.</p>
+    <div class="row">
+      <div><label>Nome dell'agente</label><input id="agent-name" type="text" value="Acme Booking Bot" /></div>
+      <div style="max-width:150px"><label>Scade tra (secondi)</label><input id="ttl" type="number" value="300" min="10" /></div>
+    </div>
+    <label>Permessi (cosa può fare)</label>
+    <div class="scopes" id="scopes"></div>
+    <button id="btn-issue" disabled>✍️ Firma il mandato</button>
+    <p class="lock" id="lock-issue">🔒 Prima crea il passaporto (step 1).</p>
+    <div id="out-issue" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">3</span> L'agente fa qualcosa <button class="q" data-tip="tip-3">?</button></h2>
+    <p class="tip" id="tip-3" hidden>L'agente mostra il mandato. Viene accettato <b>solo se</b> è valido,
+      non scaduto, non revocato e l'azione è tra i permessi. Altrimenti: rifiutato.</p>
+    <p class="desc">L'agente prova a eseguire un'azione mostrando il mandato. Viene accettato
+    <b>solo se</b> il mandato è valido e quell'azione è tra i permessi.</p>
+    <label>Azione che l'agente prova a fare</label>
+    <select id="action"></select>
+    <button id="btn-act" disabled>▶ Esegui l'azione</button>
+    <p class="lock" id="lock-act">🔒 Prima firma un mandato (step 2).</p>
+    <div id="out-act" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">4</span> Il risultato porta una ricevuta <button class="q" data-tip="tip-4">?</button></h2>
+    <p class="tip" id="tip-4" hidden>La <b>ricevuta</b> è uno scontrino firmato sul risultato: prova chi
+      l'ha prodotto e con quale permesso. La può controllare <b>chiunque</b>, anche dopo.</p>
+    <p class="desc">L'agente non produce solo un contenuto: gli allega una <b>ricevuta firmata</b>.
+    Chiunque può controllarla e sapere chi l'ha prodotto e se era autorizzato — anche dopo.</p>
+    <label>Contenuto prodotto dall'agente</label>
+    <textarea id="rc-content" rows="3" spellcheck="false" placeholder="comparirà dopo lo step 3"></textarea>
+    <label>Ricevuta allegata <span class="note">(la prova firmata)</span></label>
+    <textarea id="rc-receipt" rows="2" spellcheck="false" placeholder="comparirà dopo lo step 3"></textarea>
+    <button id="btn-verify-content" disabled>🔎 Verifica il contenuto</button>
+    <p class="lock" id="lock-verify">🔒 Prima fai agire l'agente (step 3).</p>
+    <div id="out-verify" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">5</span> Cambia idea: revoca <button class="q" data-tip="tip-5">?</button></h2>
+    <p class="tip" id="tip-5" hidden>Revoca = <b>spegni il permesso adesso</b>. Da quel momento l'agente
+      e la sua ricevuta non valgono più — in tempo reale, senza dover ri-firmare nulla.</p>
+    <p class="desc">Spegni il mandato con un clic. Torna allo step 4 e ri-controlla lo
+    <b>stesso</b> contenuto: la ricevuta passa da valida a <b>revocata all'istante</b>.</p>
+    <button id="btn-revoke" class="danger" disabled>⛔ Revoca il mandato</button>
+    <p class="lock" id="lock-revoke">🔒 Prima firma un mandato (step 2).</p>
+    <div id="out-revoke" class="out"></div>
+  </section>
+
+  <section class="step" id="adv-sec">
+    <h2><span class="num">★</span> Avanzato: catena di delega
+      <button class="q" data-tip="tip-adv">?</button></h2>
+    <p class="tip" id="tip-adv" hidden>Un agente con mandato può passarne uno <b>più stretto</b> a un
+      sotto-agente (meno permessi, meno tempo). Se revochi il mandato padre, <b>cade anche il figlio</b>.</p>
+    <p class="desc">L'agente delega a un <b>sotto-agente</b> un permesso ristretto (solo
+    <b>prenotare voli</b>, metà tempo). Il verificatore controlla tutta la catena fino all'umano.</p>
+    <button id="btn-delegate" disabled>🔗 Delega a un sotto-agente</button>
+    <p class="lock" id="lock-delegate">🔒 Prima firma un mandato (step 2).</p>
+    <p class="note">Solo dimostrativo: il sotto-agente qui non ha una chiave propria (non può firmare
+    ricevute né ri-delegare). In produzione l'endpoint sarebbe autenticato.</p>
+    <div id="out-delegate" class="out"></div>
+  </section>
+
+  <section class="step" id="history-sec" hidden>
+    <h2><span class="num">≡</span> Mandati di questa sessione</h2>
+    <p class="desc">Ogni mandato che crei, con il suo stato dal vivo. Puoi revocarli singolarmente.</p>
+    <div id="history"></div>
+  </section>
+
+</main>
+
+<!-- COSA PUOI FARCI -->
+<section class="info" style="margin-top:18px">
+  <h2>Cosa puoi farci</h2>
+  <div class="usecards">
+    <div class="uc"><div class="ic">✈️</div><b>AI che ti prenota i voli</b>
+      <p>Le dai il permesso <i>solo</i> "prenotare voli", per 1 ora. Non può toccare le email.
+      Finita la trasferta, revochi: non prenoterà mai più a tuo nome.</p></div>
+    <div class="uc"><div class="ic">📣</div><b>AI che posta per te</b>
+      <p>Permesso "pubblicare su LinkedIn" per oggi. Ogni post esce con uno scontrino: chiunque
+      vede che era autorizzato da te. Cambi idea? Revochi e i prossimi post vengono rifiutati.</p></div>
+    <div class="uc"><div class="ic">💳</div><b>AI che paga per te</b>
+      <p>Permesso stretto e a tempo per un singolo acquisto. Scaduto il mandato, l'agente non può
+      più pagare — e ogni pagamento porta la prova di chi l'ha autorizzato.</p></div>
+    <div class="uc"><div class="ic">🧾</div><b>Contenuto AI con scontrino</b>
+      <p>Ogni testo/immagine prodotto porta una ricevuta verificabile: chi l'ha fatto, con quale
+      mandato umano, quando. Utile per le nuove regole sui contenuti AI.</p></div>
+  </div>
+  <p class="note">Il filo comune: <b>permesso limitato + scadenza + revoca + scontrino verificabile</b>.</p>
+</section>
+
+<!-- PERCHÉ ESISTE -->
+<section class="info" style="margin-top:14px">
+  <h2>Perché esiste</h2>
+  <p class="story">Internet si sta riempiendo di agenti AI che agiscono al posto nostro. Il problema
+  non è "sei umano?" (gara persa: l'AI batte i CAPTCHA), ma <b>"chi ha autorizzato questa azione, e
+  vale ancora?"</b>. I numeri:</p>
+  <ul class="facts">
+    <li><b>Oltre il 50%</b> del traffico web è ormai bot (2025) — il "Dead Internet".
+      <a href="https://www.nbcnews.com/tech/tech-news/bot-web-traffic-overtaken-human-web-traffic-data-shows-rcna348522" target="_blank" rel="noopener">fonte</a></li>
+    <li>Traffico degli agenti AI <b>+450%</b> in un anno.
+      <a href="https://www.axios.com/2026/04/17/worldcoin-zoom-shopify-retail-partnership" target="_blank" rel="noopener">contesto</a></li>
+    <li><b>a16z</b>: "il collo di bottiglia dell'economia degli agenti è l'<b>identità</b>, non l'intelligenza".
+      <a href="https://a16zcrypto.com/posts/article/ai-needs-crypto-now/" target="_blank" rel="noopener">fonte</a></li>
+    <li><b>EU AI Act, Art. 50</b> (ago 2026): i contenuti AI vanno dichiarati in modo
+      <b>machine-readable</b>. <a href="https://artificialintelligenceact.eu/article/50/" target="_blank" rel="noopener">testo</a></li>
+    <li>Paper <b>OpenAI / MIT</b> "Personhood Credentials": mancano norme e standard per gli agenti AI.
+      <a href="https://arxiv.org/abs/2408.07892" target="_blank" rel="noopener">arXiv 2408.07892</a></li>
+  </ul>
+  <p class="story"><b>Vouchsafe risponde a questo:</b> un <b>mandato umano</b> verificabile +
+  <b>revoca</b> in tempo reale + uno <b>scontrino</b> firmato sull'output. Non reinventa l'identità:
+  aggiunge la parte che manca — <b>responsabilità e controllo</b>.</p>
+</section>
+
+<!-- PER SVILUPPATORI -->
+<section class="info dev" id="dev" style="margin-top:14px">
+  <h2>Per sviluppatori — mettilo nel tuo agente</h2>
+  <p class="story">Vouchsafe non è un'app in cui fai login: è un <b>wrapper</b> attorno a ciò che il
+  tuo agente già produce. L'agente firma il suo output, <b>chiunque</b> lo verifica con la sola
+  chiave pubblica — e se l'umano revoca il mandato, quell'output smette di valere all'istante.
+  Funziona con Claude Code, Codex, un tool MCP o un semplice script. SDK in <b>Python</b> e
+  <b>JavaScript</b>, una <b>CLI</b>, zero infrastruttura.</p>
+
+  <div class="flow" style="margin-top:14px">
+    <div class="box"><div class="ic">🆔</div><b>1 · Identità</b><span>una chiave = l'agente</span></div>
+    <div class="arr">→</div>
+    <div class="box"><div class="ic">📜</div><b>2 · Mandato</b><span>l'umano firma una volta</span></div>
+    <div class="arr">→</div>
+    <div class="box"><div class="ic">🖊️</div><b>3 · Firma output</b><span>sign_receipt(...)</span></div>
+    <div class="arr">→</div>
+    <div class="box"><div class="ic">🛡️</div><b>4 · Gate</b><span>verify → accetta/rifiuta</span></div>
+  </div>
+
+  <h3><span class="ic">🔧</span>Come funziona sotto il cofano</h3>
+  <p>Niente magia, solo primitivi standard messi in fila:</p>
+  <div class="tbl"><table>
+    <tr><th>Pezzo</th><th>Cos'è</th></tr>
+    <tr><td><b>Identità agente</b></td><td>una coppia di chiavi <b>Ed25519</b>. Il suo <code>did:key</code> <i>è</i> l'identità dell'agente — firma le ricevute.</td></tr>
+    <tr><td><b>Mandato</b></td><td>una <b>W3C Verifiable Credential</b> come <b>VC-JWT</b> (JOSE), firmata dall'issuer (Ed25519) e <b>contro-firmata dall'umano via WebAuthn</b> (la passkey firma l'hash canonico del mandato — JCS / RFC 8785).</td></tr>
+    <tr><td><b>Content Receipt</b></td><td>un VC-JWT firmato dall'agente che lega <code>SHA-256(byte&nbsp;output) + mandato + scope + tempo</code>. Un byte cambiato → la firma non torna.</td></tr>
+    <tr><td><b>Revoca</b></td><td>un endpoint di stato online. La verifica lo interroga: mandato revocato → la ricevuta non verifica più. <b>Fail-closed</b> (issuer irraggiungibile = rifiuto).</td></tr>
+  </table></div>
+
+  <h3><span class="ic">📦</span>Installa</h3>
+  <pre class="code"><span class="c"># Python 3.11+ — SDK + CLI</span>
+cd packages/python && uv pip install -e .
+<span class="c"># prova l'intero giro senza server né passkey:</span>
+uv run python examples/standalone.py</pre>
+
+  <h3><span class="ic">①②③④</span>Le 4 mosse, in dettaglio</h3>
+  <p><b>1. Crea l'identità dell'agente</b> (una volta). Il <code>did:key</code> stampato è l'agente.</p>
+  <pre class="code">vouchsafe keygen --out agent.pem</pre>
+  <p><b>2. Un umano emette il mandato</b> per quel <code>did:key</code> (una volta), firmando con la
+  passkey nella demo web qui sopra. Poi passi all'agente token + chiave come segreti:</p>
+  <pre class="code">export AP_AGENT_KEY=agent.pem
+export AP_TOKEN=passport.jwt      <span class="c"># il token emesso — vale fino a scadenza o revoca</span></pre>
+  <p><b>3. L'agente firma ogni output</b> che produce.</p>
+  <pre class="code">vouchsafe sign report.md > report.md.receipt</pre>
+  <p><b>4. Chiunque fa da gate</b> — exit 0 = ok, exit 1 = rifiuto. Controllo revoca via HTTP.</p>
+  <pre class="code">vouchsafe verify report.md report.md.receipt --issuer "$AP_ISSUER" || exit 1</pre>
+
+  <h3><span class="ic">🐍</span>Nel codice (SDK Python)</h3>
+  <pre class="code">from vouchsafe import sign_receipt, verify_receipt
+
+<span class="c"># lato agente — token + chiave dall'emissione</span>
+receipt = sign_receipt(output_bytes, AP_TOKEN, agent_key,
+                       scope="post:linkedin", mandate_id=mid)
+
+<span class="c"># lato verificatore — basta la chiave pubblica dell'issuer</span>
+res = verify_receipt(output_bytes, receipt, expected_issuer=ISSUER_DID)
+if not res.valid:
+    reject(res.reason)   <span class="c"># "notRevoked" | "outputHash" | "scope" | ...</span></pre>
+  <p class="note">Stesso SDK in JavaScript (Node 20+ / browser): <code>verifyReceipt(...)</code>
+  verifica anche i token emessi dal Python (interop cross-SDK testato).</p>
+
+  <h3><span class="ic">🧩</span>Pattern di integrazione</h3>
+  <div class="tbl"><table>
+    <tr><th>Dove</th><th>Come</th></tr>
+    <tr><td><b>Claude Code / Codex</b></td><td>un hook <code>Stop</code> firma il deliverable del sub-agente; un gate a valle fa <code>vouchsafe verify</code>. Revochi → l'output del sub-agente viene rifiutato in automatico.</td></tr>
+    <tr><td><b>Agente → agente (A2A)</b></td><td>chi produce spedisce <code>{output, receipt}</code>; chi consuma chiama <code>verify_receipt</code> prima di fidarsi.</td></tr>
+    <tr><td><b>Tool MCP</b></td><td>avvolgi la response del tool con una ricevuta; il client la verifica prima di usarla.</td></tr>
+    <tr><td><b>Output verso umani</b></td><td>pubblichi la ricevuta accanto al contenuto; chiunque incolla i due in <code>/verify.html</code>.</td></tr>
+  </table></div>
+
+  <details class="decode" style="margin-top:14px">
+    <summary>Hook Claude Code — <code>.claude/settings.json</code></summary>
+    <div class="kv"><pre class="code" style="margin:10px 0 0">{
+  "hooks": {
+    "Stop": [
+      { "matcher": "*", "hooks": [
+        { "type": "command",
+          "command": "sh integrations/claude-code/sign_deliverable.sh" }
+      ] }
+    ]
+  }
+}</pre>
+    <p style="padding:0 2px">L'orchestratore mette in <code>AP_DELIVERABLE</code> il file prodotto
+    (path <b>fidato</b>, mai output grezzo del modello). Lo script firma; il lato che consuma fa il
+    gate. Ricetta + demo eseguibile in <code>integrations/claude-code/</code>.</p></div>
+  </details>
+
+  <details class="decode">
+    <summary>Cosa controlla <code>verify()</code> (in ordine)</summary>
+    <div class="kv" style="padding:10px 14px 14px">
+      <div class="ckrow"><span class="ckname">receiptSignature</span><span>la ricevuta è firmata dall'agente (Ed25519, <code>alg</code> pinnato).</span></div>
+      <div class="ckrow"><span class="ckname">outputHash</span><span>i byte del contenuto combaciano con l'hash firmato — niente modifiche.</span></div>
+      <div class="ckrow"><span class="ckname">agentBinding</span><span>l'agente della ricevuta è il soggetto del mandato (stesso <code>did:key</code>).</span></div>
+      <div class="ckrow"><span class="ckname">issuerSignature</span><span>il mandato è firmato dall'issuer atteso.</span></div>
+      <div class="ckrow"><span class="ckname">recognizedFormat</span><span>contesto/tipo della credenziale riconosciuti (rifiuta formati ignoti).</span></div>
+      <div class="ckrow"><span class="ckname">humanProof</span><span>la firma WebAuthn dell'umano è valida sull'hash del mandato.</span></div>
+      <div class="ckrow"><span class="ckname">notExpired</span><span>siamo dentro la finestra <code>validFrom…validUntil</code>.</span></div>
+      <div class="ckrow"><span class="ckname">notRevoked</span><span>il mandato non è stato revocato (controllo online, fail-closed).</span></div>
+      <div class="ckrow"><span class="ckname">scope</span><span>l'azione/contenuto rientra nei permessi del mandato.</span></div>
+    </div>
+  </details>
+
+  <h3><span class="ic">⚖️</span>Limiti onesti (dichiarali a chi integri)</h3>
+  <ul class="facts">
+    <li>La passkey firma un <b>hash opaco</b>, non lo scope leggibile: il consenso informato dipende dalla UI dell'issuer (<code>SPEC.md</code> §10).</li>
+    <li>La ricevuta prova <b>provenienza autorizzata</b>, non che il contenuto sia <i>vero</i>, e non sopravvive all'<b>analog hole</b> (rifotografi/riscrivi → byte diversi).</li>
+    <li>Revoca v1 = endpoint semplice, <b>fail-closed</b> senza grace; <code>did:key</code>/base58 hand-rolled (ok per reference impl, usa una lib audita in produzione).</li>
+  </ul>
+
+  <p class="note" style="margin-top:14px">Riferimento completo → <b>INTEGRATION.md</b> (i 4 pattern),
+  <b>SPEC.md</b> (formato mandato + Content Receipt §13 + threat model), e
+  <code>examples/standalone.py</code> per il giro end-to-end senza server.</p>
+</section>
+
+<p class="foot">Tutto gira in locale, gratis. Vuoi controllare una ricevuta da solo?
+→ <a href="/verify.html">apri il verificatore</a>
+<br><span style="opacity:.8"><a href="https://github.com/lorenzotalamucci0-stack/vouchsafe" target="_blank" rel="noopener">GitHub</a><span class="sep">·</span>open source, Apache-2.0<span class="sep">·</span>SDK Python + JS<span class="sep">·</span>zero infrastruttura</span></p>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

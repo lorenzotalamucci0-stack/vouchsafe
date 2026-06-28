@@ -1,0 +1,12 @@
+{
+  "name": "agent-passport-e2e",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.61.1"
+  }
+}

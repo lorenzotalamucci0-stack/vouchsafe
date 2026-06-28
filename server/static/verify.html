@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vouchsafe — verifica una ricevuta</title>
+<style>
+  :root{--bg:#0b0e14;--panel:#141925;--panel2:#0e1320;--line:#222a3a;--txt:#e6e9f0;--mut:#93a0b4;
+    --acc:#5b8cff;--ok:#34d399;--bad:#f87171;--okbg:rgba(52,211,153,.12);--badbg:rgba(248,113,113,.12);
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1000px 440px at 50% -120px,#121a2e 0%,var(--bg) 70%);
+    color:var(--txt);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden}
+  .wrap{max-width:680px;margin:0 auto;padding:34px 20px 60px}
+  h1{font-size:25px;margin:0 0 4px;letter-spacing:-.02em;font-weight:800}
+  h1 .tag{color:var(--acc)}
+  p.sub{color:var(--mut);margin:8px 0 22px}
+  label{display:block;font-size:13px;color:var(--mut);margin:16px 0 5px}
+  textarea{width:100%;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:11px;padding:12px 13px;font:13px var(--mono);resize:vertical;line-height:1.45;word-break:break-all}
+  button{appearance:none;border:0;background:var(--acc);color:#fff;font:600 15px system-ui;padding:12px 20px;
+    border-radius:11px;cursor:pointer;margin-top:18px;transition:filter .15s}
+  button:hover{filter:brightness(1.08)}
+  .out{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:none}
+  .out.show{display:block}
+  .out.ok{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,var(--okbg),transparent)}
+  .out.bad{border-color:rgba(248,113,113,.45);background:linear-gradient(180deg,var(--badbg),transparent)}
+  .verdict{display:flex;align-items:center;gap:12px;font:800 20px/1.2 system-ui;margin:0}
+  .verdict .ico{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:23px}
+  .verdict.ok{color:var(--ok)} .verdict.ok .ico{background:var(--okbg)}
+  .verdict.bad{color:var(--bad)} .verdict.bad .ico{background:var(--badbg)}
+  .saidline{margin:12px 0 0;font-size:14.5px}
+  .meta{color:var(--mut);font:12px var(--mono);margin-top:12px;word-break:break-all}
+  .checks{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px}
+  .checks li{display:flex;align-items:center;gap:9px;font-size:13.5px}
+  .checks .mark{flex:none;width:20px;text-align:center;font-weight:700}
+  .checks .y .mark{color:var(--ok)} .checks .n .mark{color:var(--bad)} .checks .skip{color:var(--mut)}
+  .checks .skip .mark{color:var(--mut)}
+  a{color:var(--acc)}
+  .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mut);
+    font-size:13.5px;border:1px solid var(--line);border-radius:9px;padding:7px 12px;margin-bottom:18px}
+  .back:hover{color:var(--acc);border-color:var(--acc)}
+  h1 a{text-decoration:none;color:inherit}
+  .q{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel2);color:var(--mut);font:700 11px system-ui;cursor:pointer;flex:none}
+  .q:hover{color:var(--acc);border-color:var(--acc)}
+  .why{margin:2px 0 0 29px;color:var(--mut);font-size:12.5px} .why[hidden]{display:none}
+  @media (max-width:520px){ .wrap{padding:20px 14px} h1{font-size:22px} .verdict{font-size:18px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← Torna alla demo</a>
+  <h1><a href="/">Agent <span class="tag">Passport</span></a> — verifica una ricevuta</h1>
+  <p class="sub">Incolla un <b>contenuto</b> e la sua <b>ricevuta</b>: ti dico chi l'ha prodotto,
+  con il permesso di chi, e se è ancora valido.</p>
+
+  <label>Contenuto (incolla il testo esatto)</label>
+  <textarea id="content" rows="5" spellcheck="false" placeholder="il contenuto prodotto dall'agente"></textarea>
+  <label>Ricevuta</label>
+  <textarea id="receipt" rows="4" spellcheck="false" placeholder="la stringa della ricevuta firmata"></textarea>
+  <button id="btn">Verifica</button>
+  <div id="out" class="out"></div>
+</div>
+<script src="/verify.js"></script>
+</body>
+</html>
