@@ -1,0 +1,27 @@
+[project]
+name = "agent-passport"
+version = "0.1.0"
+description = "A verifiable, revocable mandate for AI agents — proving a human authorized the agent (scope + expiry + revocation)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Lorenzo Talamucci" }]
+dependencies = [
+    "cryptography>=42",
+    "pyjwt>=2.8",
+    "webauthn>=2.5",
+]
+
+[project.optional-dependencies]
+server = ["fastapi>=0.111", "uvicorn[standard]>=0.30"]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agent_passport"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

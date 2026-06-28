@@ -4,6 +4,10 @@
 .env.*.local
 *.pem
 *.key
+server/.keys/
+server/.data/
+test-results/
+e2e/shots/
 
 # Python
 __pycache__/

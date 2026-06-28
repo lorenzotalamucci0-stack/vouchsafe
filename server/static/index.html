@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Passport — demo</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#141925; --line:#222a3a; --txt:#e6e9f0; --mut:#8b95a8;
+    --acc:#5b8cff; --ok:#34d399; --bad:#f87171; --warn:#fbbf24;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+  header{padding:28px 24px 8px;max-width:920px;margin:0 auto}
+  h1{margin:0;font-size:26px;letter-spacing:-.02em}
+  h1 .tag{color:var(--acc)}
+  .sub{color:var(--mut);margin:6px 0 0}
+  main{max-width:920px;margin:0 auto;padding:16px 24px 60px;display:grid;gap:16px}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .step h2{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:#1d2638;color:var(--acc);font:600 13px/1 var(--mono)}
+  .step p{margin:4px 0 12px;color:var(--mut);font-size:13.5px}
+  label{display:block;font-size:12.5px;color:var(--mut);margin:10px 0 4px}
+  input[type=text],input[type=number],select{width:100%;background:#0e1320;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font:14px var(--mono)}
+  .scopes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chk{display:flex;align-items:center;gap:6px;background:#0e1320;border:1px solid var(--line);padding:7px 10px;border-radius:9px;font:13px var(--mono);cursor:pointer}
+  .chk input{accent-color:var(--acc)}
+  button{appearance:none;border:1px solid var(--line);background:var(--acc);color:#fff;font:600 14px system-ui;padding:10px 16px;border-radius:10px;cursor:pointer;margin-top:14px}
+  button.ghost{background:#1a2030;color:var(--txt)}
+  button.danger{background:var(--bad)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .row>div{flex:1;min-width:160px}
+  .out{margin-top:12px;font:12.5px/1.5 var(--mono);color:var(--mut);word-break:break-all;background:#0e1320;border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:none}
+  .out.show{display:block}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font:600 11px var(--mono);margin-right:6px}
+  .pill.ok{background:rgba(52,211,153,.15);color:var(--ok)}
+  .pill.bad{background:rgba(248,113,113,.15);color:var(--bad)}
+  .verdict{font:700 18px system-ui;margin:0 0 8px}
+  .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+  .checks{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
+  .checks li{font:13px var(--mono)}
+  .checks .y{color:var(--ok)} .checks .n{color:var(--bad)} .checks .skip{color:var(--mut)}
+  .muted{color:var(--mut);font-size:12px}
+  a{color:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Agent <span class="tag">Passport</span></h1>
+  <p class="sub">Una patente verificabile e revocabile per agenti AI. Un umano firma con la passkey →
+  l'agente porta il mandato → un endpoint lo accetta <b>solo se vivo</b> → premi <b>revoca</b> e si spegne.</p>
+</header>
+<main>
+
+  <section class="step">
+    <h2><span class="num">1</span> Crea il tuo passaporto (passkey)</h2>
+    <p>Registri una passkey nel tuo dispositivo: è la <b>radice umana</b>. Nessuna password, nessun server vede la chiave privata.</p>
+    <button id="btn-register">Crea passaporto con passkey</button>
+    <div id="out-register" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span> Genera un mandato per un agente</h2>
+    <p>Definisci <b>chi</b> (l'agente), <b>cosa</b> (scope) e <b>per quanto</b> (scadenza). Firmi il mandato con la passkey.</p>
+    <div class="row">
+      <div><label>Nome agente</label><input id="agent-name" type="text" value="Acme Booking Bot" /></div>
+      <div style="max-width:140px"><label>Scadenza (secondi)</label><input id="ttl" type="number" value="300" min="10" /></div>
+    </div>
+    <label>Scope (permessi)</label>
+    <div class="scopes" id="scopes"></div>
+    <button id="btn-issue" disabled>Genera mandato (firma con passkey)</button>
+    <div id="out-issue" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">3</span> L'agente esegue un'azione</h2>
+    <p>L'agente presenta il mandato all'endpoint protetto <code>/agent/act</code>. Il verifier controlla firma + scadenza + revoca + scope.</p>
+    <label>Azione richiesta dall'agente</label>
+    <select id="action"></select>
+    <button id="btn-act" disabled>L'agente esegue l'azione →</button>
+    <div id="out-act" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">4</span> Revoca in tempo reale</h2>
+    <p>Spegni il mandato. Poi ri-prova lo step 3: l'agente viene <b>rifiutato all'istante</b>.</p>
+    <button id="btn-revoke" class="danger" disabled>⛔ Revoca il mandato</button>
+    <div id="out-revoke" class="out"></div>
+  </section>
+
+  <p class="muted">Tutto locale. Spec del formato in <code>SPEC.md</code>, SDK Python/JS in <code>packages/</code>.</p>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

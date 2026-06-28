@@ -1,0 +1,17 @@
+{
+  "name": "agent-passport",
+  "version": "0.1.0",
+  "description": "A verifiable, revocable mandate for AI agents — issue / present / verify / revoke.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
