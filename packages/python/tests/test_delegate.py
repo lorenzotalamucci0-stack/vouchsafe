@@ -116,6 +116,20 @@ def test_wrong_parent_key_rejected(world):
         _child(world, ["book:flights"], agent_key=other)  # not the parent subject
 
 
+def test_child_unknown_format_rejected(world):
+    """SPEC §12 in-chain: a child with an unrecognized @context/type is rejected, even if its
+    signature (by the real parent agent key) is valid. Guards the domain-separation guarantee."""
+    from agent_passport.jwtvc import sign_vc_jwt
+    child, _ = _child(world, ["book:flights"])
+    payload = jwt.decode(child, options={"verify_signature": False})
+    payload["vc"]["@context"] = ["https://evil.example/v9"]   # unknown context
+    payload["vc"]["type"] = ["VerifiableCredential", "RogueMandate"]
+    forged = sign_vc_jwt(payload, {"typ": "mandate+jwt"}, world["agent_key"])
+    world["store"].register(payload["vc"]["id"])
+    r = verify_chain(forged, status_resolver=world["resolver"])
+    assert r.valid is False and r.reason == "recognizedFormat"
+
+
 def test_two_level_chain_and_root_revoke(world):
     child, child_key = _child(world, ["book:flights", "post:linkedin"])
     # grandchild delegated by the CHILD agent, narrower again

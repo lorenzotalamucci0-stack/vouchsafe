@@ -36,12 +36,16 @@ revocabile per gli agenti AI**. Una persona reale firma un mandato — *cosa* pu
 senza dover sapere chi sei. Non reinventa l'identità: si appoggia a quella che hai già (passkey,
 ecc.). Aggiunge la parte che oggi manca: **responsabilità + revoca**.
 
-Non è ancora un prodotto. E sono onesto: **non ho inventato lo standard** — Google (AP2), il
-protocollo AIP e UCAN stanno già standardizzando il "mandato agentico". Quello che ho costruito è
-una **reference implementation neutrale e human-rooted**: una **root umana** (la tua passkey) + uno
-**scontrino vivente** + **revoca in tempo reale**, standalone e senza infrastruttura — mentre i
-grandi standardizzano la stessa cosa dentro i loro silos.
+Non è ancora un prodotto, e sono onesto su una cosa: **non ho inventato un nuovo standard.** Google
+(AP2, ora donato alla **FIDO Alliance**), il protocollo AIP (IETF draft) e UCAN stanno già
+standardizzando il "mandato agentico come credenziale verificabile" — root umana, scope, revoca
+sono già lì. Quello che ho costruito è una cosa più modesta e, credo, utile: una **reference
+implementation neutrale, eseguibile in 3 comandi**, che mette insieme in *un solo flusso provabile*
+ciò che oggi è sparso tra spec e partner — umano firma → l'agente produce → chiunque verifica →
+revoca live — più uno **scontrino firmato del contenuto** legato a quel mandato. Complementare a
+quegli standard, non in concorrenza.
 
-Ci sto lavorando, open source (Apache-2.0). Curioso di sapere cosa ne pensate. 👇
+Ci sto lavorando, open source (Apache-2.0), e nel repo dichiaro anche i **limiti** (la passkey
+firma un hash opaco; la non-trasferibilità del root resta aperta). Curioso di sapere cosa ne pensate. 👇
 
 #AI #AIagents #Identity #Crypto #FutureOfWork

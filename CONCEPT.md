@@ -34,7 +34,10 @@ Finestra: nascente ma **non vergine** — Google AP2, AIP, UCAN stanno già stan
 agentico come VC" (AP2 con 60+ partner). I primitivi crittografici sono maturi solo da poco
 (post-2022). Posizione onesta: **non inventiamo lo standard, ne facciamo una reference
 implementation neutrale e human-rooted** — root umana WebAuthn + scontrino vivente + revoca
-real-time, standalone e zero-infra, mentre i grandi standardizzano la stessa cosa dentro i loro silos.
+real-time, standalone e zero-infra, **complementare** agli standard in arrivo (AP2 è sotto FIDO
+Alliance in governance aperta; AIP è un IETF draft), non in concorrenza. I primitivi (root umana,
+delega attenuata, TTL, revoca) sono prior-art: il contributo è l'impl eseguibile e il bridge
+end-to-end mandato→scontrino, non un primitivo nuovo.
 
 ## 3. La soluzione (il meccanismo)
 

@@ -151,7 +151,12 @@ def _verify_node(token, required_scope, depth, now, max_depth,
     child_subj = vc["credentialSubject"]
 
     # Ordered checks for the child link.
-    if not (child_issuer == parent_subj["id"] == vc.get("issuer")):
+    # SPEC §12: every link — not just the root — MUST be a recognized context/type.
+    ctx = vc.get("@context") or []
+    typ = vc.get("type") or []
+    if not (("https://agentpassport.dev/v1" in ctx) and ("AgentMandate" in typ)):
+        reason = "recognizedFormat"
+    elif not (child_issuer == parent_subj["id"] == vc.get("issuer")):
         reason = "childBinding"
     elif not set(child_subj.get("scope", [])) <= set(parent_subj.get("scope", [])):
         reason = "scopeNarrowing"

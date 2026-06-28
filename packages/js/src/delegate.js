@@ -43,7 +43,10 @@ async function _node(token, requiredScope, depth, opts) {
 
   const pvc = vcOf(vc.delegatedFrom), ps = pvc.credentialSubject, cs = vc.credentialSubject;
   let reason = null;
-  if (!(iss === ps.id && ps.id === vc.issuer)) reason = "childBinding";
+  // SPEC §12: every link — not just the root — MUST be a recognized context/type.
+  const ctx = vc["@context"] || [], typ = vc.type || [];
+  if (!(ctx.includes("https://agentpassport.dev/v1") && typ.includes("AgentMandate"))) reason = "recognizedFormat";
+  else if (!(iss === ps.id && ps.id === vc.issuer)) reason = "childBinding";
   else if (!subset(cs.scope || [], ps.scope || [])) reason = "scopeNarrowing";
   else if (Date.parse(vc.validUntil) > Date.parse(pvc.validUntil)) reason = "expiryNarrowing";
   else if (!(Date.parse(vc.validFrom) <= now && now <= Date.parse(vc.validUntil))) reason = "notExpired";

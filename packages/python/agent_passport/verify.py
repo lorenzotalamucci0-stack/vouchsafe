@@ -29,7 +29,12 @@ class VerificationResult:
 
 
 def _parse_ts(rfc3339: str) -> datetime:
-    return datetime.strptime(rfc3339, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    # Accept the full RFC 3339 surface (fractional seconds, numeric offsets), not only "...Z".
+    # We issue the strict "...Z" form, but verifiers MUST read what other issuers legitimately emit.
+    dt = datetime.fromisoformat(rfc3339)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _finalize(checks: dict, **kwargs) -> VerificationResult:

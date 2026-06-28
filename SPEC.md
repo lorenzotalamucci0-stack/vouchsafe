@@ -205,8 +205,11 @@ the first failure.
   (`AgentMandate`) as its first canonical members. Those act as the domain separator: a hash
   produced for any other Agent Passport object (e.g. a Content Receipt, whose `type` differs, or a
   future credential under a different `@context`) cannot collide with a mandate challenge, so a
-  passkey assertion captured in one context cannot be replayed as a mandate in another. A dedicated
-  `proofPurpose` tag in the preimage is reserved for v2 to make this explicit rather than implicit.
+  passkey assertion captured in one context cannot be replayed as a mandate in another. **Scope of
+  this property (do not overstate it):** it defends only against *cross-object* replay; it does
+  **not** defend against a malicious issuer swapping the scope *within* a mandate — that is the
+  opaque-hash limit above, and the domain separator does nothing for it. A dedicated `proofPurpose`
+  tag in the preimage is reserved for v2 to make this separation explicit rather than implicit.
 
 ### Operational requirements for deployers
 - **Revocation must be authenticated.** The revoke action MUST be authorized — only the human who

@@ -12,6 +12,7 @@ Flow:
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -73,6 +74,9 @@ PENDING: dict[str, dict] = {}     # mandateId -> {inner, humanId}
 # allowlist; a real issuer would resolve this per human/agent/organization.
 ALLOWED_SCOPES = {"read:calendar", "book:flights", "post:linkedin", "send:email"}
 MAX_TTL_SECONDS = 24 * 3600
+# A signing challenge is single-use (popped on success) AND short-lived: a captured passkey
+# assertion cannot be replayed at issuance once this window closes.
+CHALLENGE_TTL_SECONDS = 300
 
 app = FastAPI(title="Agent Passport demo")
 
@@ -171,7 +175,10 @@ def mandate_challenge(body: ChallengeBody):
     )
     from agent_passport.jcs import b64url, mandate_hash
 
-    PENDING[inner["id"]] = {"inner": inner, "humanId": body.humanId}
+    PENDING[inner["id"]] = {
+        "inner": inner, "humanId": body.humanId,
+        "expiresAt": time.time() + CHALLENGE_TTL_SECONDS,
+    }
     return {
         "mandateId": inner["id"],
         "challenge": b64url(mandate_hash(inner)),
@@ -182,9 +189,13 @@ def mandate_challenge(body: ChallengeBody):
 
 @app.post("/mandate/issue")
 def mandate_issue(body: IssueBody):
-    pending = PENDING.get(body.mandateId)
+    # Atomically claim the challenge: pop it so the same assertion can never be replayed,
+    # even if issuance below fails (the client must request a fresh challenge to retry).
+    pending = PENDING.pop(body.mandateId, None)
     if pending is None:
         return JSONResponse({"error": "unknown or expired mandate challenge"}, status_code=400)
+    if time.time() > pending["expiresAt"]:
+        return JSONResponse({"error": "mandate challenge expired; request a new one"}, status_code=400)
     human = HUMANS[pending["humanId"]]
     # The assertion must come from the passkey this human registered.
     if body.assertion.credentialId != human["credentialId"]:
@@ -204,7 +215,6 @@ def mandate_issue(body: IssueBody):
         return JSONResponse({"error": f"could not issue: {exc}"}, status_code=400)
 
     STORE.register(body.mandateId)
-    PENDING.pop(body.mandateId, None)
     return {"token": token, "mandate": {**pending["inner"], "humanProof": human_proof}}
 
 
@@ -380,6 +390,7 @@ def _chain_summary(result) -> str:
                 f"il sotto-agente può «{', '.join(leaf.get('scope', []))}», dentro i limiti del padre.")
     reasons = {
         "childSignature": "la firma di un anello della catena non è valida.",
+        "recognizedFormat": "un anello usa un formato (@context/type) non riconosciuto.",
         "childBinding": "un anello non è stato firmato dall'agente giusto.",
         "scopeNarrowing": "un figlio chiede più permessi del padre (deve restringere, non allargare).",
         "expiryNarrowing": "un figlio dura più del padre (deve scadere prima o insieme).",

@@ -29,8 +29,11 @@ cd ../../server && ../packages/python/.venv/bin/python run.py
 ```
 
 Crea il passaporto con la passkey → dai un incarico all'agente → l'agente agisce **solo se il
-mandato è vivo** → premi **revoca** e viene rifiutato all'istante. C'è anche un verificatore
-indipendente su `/verify.html`.
+mandato è vivo** → premi **revoca** e viene rifiutato all'istante. Su `/verify.html` c'è un
+**verificatore lato-utente**: la stessa logica `verify()` che chiunque può eseguire offline con
+la sola chiave pubblica dell'issuer. *(Nota: in questa demo il controllo di revoca passa dallo
+stesso processo del server — non è un secondo servizio indipendente; in produzione sarebbe una
+fetch HTTP all'endpoint di status dell'issuer.)*
 
 ## I due pilastri
 
@@ -45,7 +48,10 @@ indipendente su `/verify.html`.
    con permessi (scope), scadenza, e revoca istantanea. *(la GIF sopra)*
 2. **Content Receipt — lo scontrino.** *Questo output l'ha prodotto un agente autorizzato?* Una
    **ricevuta firmata** allegata all'output che lega `hash(contenuto) + agente + mandato + tempo`.
-   Revoca il mandato → la ricevuta diventa **non valida all'istante**.
+   La ricevuta certifica **autorizzazione al momento `producedAt`**, e la verifica riflette lo
+   **stato corrente** del mandato: revochi → la ricevuta smette di verificare (è *autorizzazione
+   vivente*, non un timbro d'archivio immutabile — distinzione in `SPEC.md` §13.4). Modello: non
+   un nuovo standard di provenienza ma, idealmente, una **assertion proponibile dentro C2PA**.
 
 ![Content Receipt: contenuto valido → revoca → contenuto revocato](docs/media/demo-receipt.gif)
 
@@ -73,15 +79,20 @@ vivente** sopra standard emergenti — non un nuovo root-of-trust.
 
 | Progetto | Cosa fa | Come differiamo (onesto) |
 |--|--|--|
-| [Google **AP2**](https://github.com/google-agentic-commerce/AP2) (Agent Payments Protocol) | Mandato-come-VC, umano firma con passkey | AP2 è **payment-scoped**. Noi: scope **generico**, standalone, zero-infra, + **content receipt** (assente in AP2). |
+| [Google **AP2**](https://github.com/google-agentic-commerce/AP2) (Agent Payments Protocol) | Mandato-come-VC, umano firma con passkey, TTL+revoca; **Verifiable Intent** (log firmato delle azioni). **Donato a FIDO Alliance (apr 2026), 60+ org, governance aperta** | AP2 è *payment-agnostic* ma **mira al commerce agentico** (Intent/Cart/Payment mandate). AP è una **impl minimale standalone, scope `action:resource` libero**, eseguibile in locale. NON è "AP2 ridotto": è una reference impl neutrale, e dove possibile **interoperabile** (un mandato AP potrebbe diventare un'assertion AP2/Verifiable Intent). |
 | [**AIP**](https://arxiv.org/abs/2603.24775) (Agent Identity Protocol) | Delega verificabile, capability **attenuate**, catena, revoca | Il nostro data-model è ispirato ad AIP. **La catena di delega NON è nostra novità** (è il cuore di AIP/UCAN). Divergiamo su: **root umana WebAuthn** + **content receipt** (non specificati da AIP). |
-| [**UCAN**](https://github.com/ucan-wg/spec) | Capability JWT delegabili/revocabili/attenuate | UCAN **non** ha root umana e la revoca è *eventually consistent*. Noi: **root umana WebAuthn** + revoca **real-time, fail-closed**. |
+| [**UCAN**](https://github.com/ucan-wg/spec) | Capability JWT delegabili/revocabili/attenuate | UCAN **non** ha root umana ed è decentralizzato (revoca *eventually consistent* via gossip; il validator che apprende la revoca fallisce comunque chiuso). Noi: **root umana WebAuthn** + revoca via **endpoint centralizzato** — *scelta di deployment* (più immediata, meno decentralizzata), non un'invenzione. |
 | [**C2PA** / Content Credentials](https://c2pa.org/) | Provenienza del contenuto (citato da EU AI Act Art. 50) | Il nostro Content Receipt **non lo rimpiazza**: aggiunge un binding **ortogonale** = *autorizzazione umana vivente e revocabile*, non solo "fatto da AI". Idealmente: receipt come **assertion dentro un manifest C2PA**. |
 | [ZCAP-LD](https://w3c-ccg.github.io/zcap-spec/) · [macaroons](https://research.google/pubs/pub41892/) · [biscuit](https://www.biscuitsec.org/) · [SPIFFE](https://spiffe.io/) | Capability/identità | **SPIFFE** = identità del *workload*; noi = mandato umano *on-behalf-of* (complementari). **macaroons**: il verifier ha il root-secret → **può forgiare**; noi chiave **pubblica** → chiunque verifica *senza* poter forgiare. ZCAP-LD/biscuit = capability affini, più pesanti o senza root umana. |
 
-**La novità reale e stretta:** (a) **root umana WebAuthn** legata al *mandato esatto*; (b) **content
-receipt** = autorizzazione *vivente* (cade con la revoca); (c) **revoca real-time fail-closed**. Tutto
-il resto è costruito su standard esistenti — e lo dichiariamo.
+**Cosa porta di proprio (onesto):** non primitivi crittografici nuovi — root umana, delega
+attenuata, TTL, revoca sono **prior-art** (AP2/AIP/FIDO/UCAN). Il contributo è: (a) una
+**reference implementation neutrale ed eseguibile in 3 comandi** (SDK Python+JS cross-verificati,
+E2E con WebAuthn virtual-authenticator, Apache-2.0); (b) il **bridge end-to-end in un solo
+artefatto provabile su laptop** — umano firma → agente produce → *chiunque verifica* → revoca
+live — che nessuno dei singoli standard impacchetta così; (c) l'aggancio esplicito tra **mandato**
+e **provenienza del contenuto** (content receipt). Il valore è l'integrazione e l'adozione, non un
+nuovo standard.
 
 ## Onestà brutale
 
@@ -92,7 +103,9 @@ informato dipende dalla UI dell'issuer (vedi `SPEC.md` §Threat model — limite
 Il Content Receipt non sopravvive all'**analog hole** e non prova che il contenuto sia *vero*, solo
 che è stato prodotto da un agente autorizzato. Revoca v1 = endpoint semplice, **fail-closed** senza
 grace (W3C Bitstring Status List + ZK = fase 2). **Posizionamento:** reference implementation
-neutrale e human-rooted, mentre i grandi standardizzano la stessa cosa dentro i loro silos.
+neutrale e human-rooted *complementare* agli standard in arrivo (AP2 è sotto **FIDO Alliance** in
+governance aperta; AIP è un **IETF draft**) — non un concorrente né un "silo da scavalcare", ma
+un'impl minimale, eseguibile e idealmente interoperabile.
 
 Licenza: **Apache-2.0** (vedi [`LICENSE`](LICENSE)) — adatta a uno standard/reference impl (patent grant).
 
