@@ -1,4 +1,4 @@
-"""End-to-end in ~40 lines, no server, no browser: the whole point of Agent Passport.
+"""End-to-end in ~40 lines, no server, no browser: the whole point of Vouchsafe.
 
     cd packages/python && uv run python ../../examples/standalone.py
 
@@ -9,10 +9,10 @@ anyone verifies it → the human REVOKES → the same output+receipt is rejected
 import tempfile
 from pathlib import Path
 
-from agent_passport import verify_receipt
-from agent_passport.cli import _unverified_vc  # tiny helper: read the mandate without verifying
-from agent_passport.devkit import dev_issue
-from agent_passport.receipt import sign_receipt
+from vouchsafe import verify_receipt
+from vouchsafe.cli import _unverified_vc  # tiny helper: read the mandate without verifying
+from vouchsafe.devkit import dev_issue
+from vouchsafe.receipt import sign_receipt
 
 
 def show(title, result):
@@ -28,7 +28,7 @@ def main():
     print(f"Agent  {passport.agent_did[:32]}…  authorized for: post:linkedin\n")
 
     # 2) The agent does its work and signs the EXACT bytes it produced.
-    output = b"Abbiamo lanciato Agent Passport. Ogni azione porta una ricevuta firmata e revocabile."
+    output = b"Abbiamo lanciato Vouchsafe. Ogni azione porta una ricevuta firmata e revocabile."
     receipt = sign_receipt(output, passport.token, passport.agent_key,
                            scope="post:linkedin", mandate_id=passport.mandate_id)
 

@@ -55,7 +55,7 @@ def sign_child_mandate(
     scope: list[str],
     ttl_seconds: int,
     parent_agent_key: Ed25519PrivateKey,
-    status_base_url: str = "https://agentpassport.dev",
+    status_base_url: str = "https://vouchsafe.dev",
 ) -> str:
     """Sign a narrower child mandate. The parent agent (its key) attests the delegation."""
     parent_vc = _unverified_vc(parent_token)
@@ -154,7 +154,7 @@ def _verify_node(token, required_scope, depth, now, max_depth,
     # SPEC §12: every link — not just the root — MUST be a recognized context/type.
     ctx = vc.get("@context") or []
     typ = vc.get("type") or []
-    if not (("https://agentpassport.dev/v1" in ctx) and ("AgentMandate" in typ)):
+    if not (("https://vouchsafe.dev/v1" in ctx) and ("AgentMandate" in typ)):
         reason = "recognizedFormat"
     elif not (child_issuer == parent_subj["id"] == vc.get("issuer")):
         reason = "childBinding"

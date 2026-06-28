@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from agent_passport import (
+from vouchsafe import (
     StatusStore,
     build_inner_mandate,
     extract_token,
@@ -106,7 +106,7 @@ def test_tampered_signature(issuer_key, passkey, tmp_path):
     _, resolver = _store_with(inner, tmp_path)
 
     # Flip a byte inside the decoded signature -> issuer signature breaks deterministically.
-    from agent_passport.jcs import b64url, b64url_decode
+    from vouchsafe.jcs import b64url, b64url_decode
 
     head, payload, sig = token.split(".")
     sig_bytes = bytearray(b64url_decode(sig))

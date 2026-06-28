@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from agent_passport import (
+from vouchsafe import (
     StatusStore,
     build_inner_mandate,
     generate_issuer_key,
@@ -21,7 +21,7 @@ from agent_passport import (
 
 from _passkey import SoftwarePasskey
 
-CONTENT = b"Draft post: We just shipped Agent Passport. Verifiable mandates for AI agents."
+CONTENT = b"Draft post: We just shipped Vouchsafe. Verifiable mandates for AI agents."
 
 
 @pytest.fixture
@@ -120,7 +120,7 @@ def test_receipt_out_of_scope(issuer_key, agent_key, passkey, tmp_path):
 
 
 def test_receipt_tampered_signature(issuer_key, agent_key, passkey, tmp_path):
-    from agent_passport.jcs import b64url, b64url_decode
+    from vouchsafe.jcs import b64url, b64url_decode
 
     inner, token = _issue_mandate(issuer_key, agent_key, passkey)
     _, resolver = _store_resolver(inner, tmp_path)

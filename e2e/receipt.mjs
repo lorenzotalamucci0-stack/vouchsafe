@@ -50,7 +50,7 @@ async function verifyContent(verdictSubstr, label) {
 }
 
 await page.goto(BASE);
-check("page loaded", (await page.title()).includes("Agent Passport"));
+check("page loaded", (await page.title()).includes("Vouchsafe"));
 
 await page.getByRole("button", { name: /Crea passaporto/ }).click();
 await waitText("#out-register", "Passaporto creato", "register passport");

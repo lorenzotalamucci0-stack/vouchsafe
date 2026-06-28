@@ -89,7 +89,7 @@ def verify(
     # --- 1b. Recognized format (SPEC §12): reject contexts/types we don't understand ---
     ctx = credential.get("@context") or []
     typ = credential.get("type") or []
-    checks["recognizedFormat"] = ("https://agentpassport.dev/v1" in ctx) and ("AgentMandate" in typ)
+    checks["recognizedFormat"] = ("https://vouchsafe.dev/v1" in ctx) and ("AgentMandate" in typ)
     if not checks["recognizedFormat"]:
         return _finalize(checks, mandate=credential)
 

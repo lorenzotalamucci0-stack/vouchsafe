@@ -1,4 +1,4 @@
-// Agent Passport demo — native WebAuthn, zero dependencies. Plain-language, explain-everything UX.
+// Vouchsafe demo — native WebAuthn, zero dependencies. Plain-language, explain-everything UX.
 
 const SCOPES = ["read:calendar", "book:flights", "post:linkedin", "send:email"];
 const SCOPE_LABEL = {
@@ -12,7 +12,7 @@ const revokedIds = new Set();
 
 // Plain-language names + one-line "why" for each verification check.
 const CHECK_LABEL = {
-  issuerSignature: "Emesso da Agent Passport", recognizedFormat: "Formato riconosciuto",
+  issuerSignature: "Emesso da Vouchsafe", recognizedFormat: "Formato riconosciuto",
   trustedIssuer: "Emittente riconosciuto",
   humanProof: "Autorizzato da una persona (passkey)", notExpired: "Mandato non scaduto",
   notRevoked: "Mandato non revocato", scope: "Azione tra i permessi",
@@ -20,8 +20,8 @@ const CHECK_LABEL = {
   outputHash: "Contenuto non modificato", agentBinding: "Agente collegato al mandato",
 };
 const CHECK_WHY = {
-  issuerSignature: "Il mandato è firmato dal servizio Agent Passport: non è un foglietto falso.",
-  recognizedFormat: "Il mandato usa il formato Agent Passport che il verificatore conosce.",
+  issuerSignature: "Il mandato è firmato dal servizio Vouchsafe: non è un foglietto falso.",
+  recognizedFormat: "Il mandato usa il formato Vouchsafe che il verificatore conosce.",
   trustedIssuer: "Viene proprio dall'emittente che ti aspetti, non da un impostore.",
   humanProof: "Dietro c'è un umano vero (ha firmato con la passkey), non un altro bot.",
   notExpired: "Il permesso non è ancora scaduto.",
@@ -187,7 +187,7 @@ $("btn-register").addEventListener("click", async () => {
     const cred = await navigator.credentials.create({
       publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
-        rp: { name: "Agent Passport", id: "localhost" },
+        rp: { name: "Vouchsafe", id: "localhost" },
         user: { id: crypto.getRandomValues(new Uint8Array(16)), name: "demo-user", displayName: "Demo User" },
         pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
         authenticatorSelection: { userVerification: "preferred", residentKey: "preferred" },

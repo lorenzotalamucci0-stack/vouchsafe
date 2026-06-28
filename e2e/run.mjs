@@ -64,7 +64,7 @@ async function act(action, verdictSubstr, label) {
 }
 
 await page.goto(BASE);
-check("page loaded", (await page.title()).includes("Agent Passport"));
+check("page loaded", (await page.title()).includes("Vouchsafe"));
 
 // Step 1 — register passkey
 await page.getByRole("button", { name: /Crea passaporto/ }).click();

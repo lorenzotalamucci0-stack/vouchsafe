@@ -1,5 +1,5 @@
 {
-  "name": "agent-passport",
+  "name": "vouchsafe",
   "version": "0.1.0",
   "description": "A verifiable, revocable mandate for AI agents — issue / present / verify / revoke.",
   "type": "module",

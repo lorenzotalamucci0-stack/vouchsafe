@@ -1,4 +1,4 @@
-# Agent Passport — Mandate Specification v1
+# Vouchsafe — Mandate Specification v1
 
 > **Status:** Draft v1 (2026-06-28). A thin, verifiable, revocable mandate format proving that an
 > AI agent acts on behalf of an authorized real human, within a scope, until an expiry.
@@ -52,7 +52,7 @@ Canonicalization makes the human proof reproducible by any verifier from the cre
 ```jsonc
 {
   "@context": ["https://www.w3.org/ns/credentials/v2",
-               "https://agentpassport.dev/v1"],
+               "https://vouchsafe.dev/v1"],
   "type": ["VerifiableCredential", "AgentMandate"],
   "id": "urn:uuid:5f3b...",                       // unique mandate id
   "issuer": "did:key:z6MkhaXgBZD...",             // Ed25519 issuer DID
@@ -201,9 +201,9 @@ the first failure.
   design; deployers needing availability must opt into a cache/grace policy themselves (reserved for
   v2, e.g. signed short-lived status with a TTL).
 - **Domain separation of the WebAuthn preimage.** The challenge is `SHA-256(JCS(inner))` and the
-  inner object always carries `@context` (`https://agentpassport.dev/v1`) and `type`
+  inner object always carries `@context` (`https://vouchsafe.dev/v1`) and `type`
   (`AgentMandate`) as its first canonical members. Those act as the domain separator: a hash
-  produced for any other Agent Passport object (e.g. a Content Receipt, whose `type` differs, or a
+  produced for any other Vouchsafe object (e.g. a Content Receipt, whose `type` differs, or a
   future credential under a different `@context`) cannot collide with a mandate challenge, so a
   passkey assertion captured in one context cannot be replayed as a mandate in another. **Scope of
   this property (do not overstate it):** it defends only against *cross-object* replay; it does
@@ -240,7 +240,7 @@ the first failure.
 
 ## 12. Versioning
 
-This document is `v1`. Breaking changes bump the `https://agentpassport.dev/vN` context URL and the
+This document is `v1`. Breaking changes bump the `https://vouchsafe.dev/vN` context URL and the
 `AgentMandate` type. Verifiers MUST reject contexts/types they do not understand.
 
 ## 13. Content Receipt (Pilastro 2)
@@ -257,7 +257,7 @@ A VC-JWT signed by the **agent** (Ed25519 `did:key`).
 - **Payload:** `{ iss: <agentDid>, jti: <receiptId>, sub: <agentDid>, vc: <credential> }` where:
 ```jsonc
 {
-  "@context": ["https://www.w3.org/ns/credentials/v2", "https://agentpassport.dev/v1"],
+  "@context": ["https://www.w3.org/ns/credentials/v2", "https://vouchsafe.dev/v1"],
   "type": ["VerifiableCredential", "ContentReceipt"],
   "id": "urn:uuid:...",
   "issuer": "did:key:z…(agent)",

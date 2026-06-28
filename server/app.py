@@ -1,4 +1,4 @@
-"""Agent Passport demo server (FastAPI).
+"""Vouchsafe demo server (FastAPI).
 
 Flow:
   POST /register          register a passkey -> human root id
@@ -20,7 +20,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from agent_passport import (
+from vouchsafe import (
     StatusStore,
     build_inner_mandate,
     extract_token,
@@ -78,7 +78,7 @@ MAX_TTL_SECONDS = 24 * 3600
 # assertion cannot be replayed at issuance once this window closes.
 CHALLENGE_TTL_SECONDS = 300
 
-app = FastAPI(title="Agent Passport demo")
+app = FastAPI(title="Vouchsafe demo")
 
 
 # ---------- models ----------
@@ -173,7 +173,7 @@ def mandate_challenge(body: ChallengeBody):
         ttl_seconds=body.ttlSeconds,
         status_base_url=BASE_URL,
     )
-    from agent_passport.jcs import b64url, mandate_hash
+    from vouchsafe.jcs import b64url, mandate_hash
 
     PENDING[inner["id"]] = {
         "inner": inner, "humanId": body.humanId,
@@ -279,7 +279,7 @@ def _draft_content(action: str, agent_name: str) -> str:
     """The agent's deliverable for an action (the bytes the receipt is signed over)."""
     drafts = {
         "post:linkedin": (
-            "Abbiamo lanciato Agent Passport — mandati verificabili e revocabili per agenti AI. "
+            "Abbiamo lanciato Vouchsafe — mandati verificabili e revocabili per agenti AI. "
             "Ogni azione di un agente può ora portare una ricevuta firmata che prova che una "
             "persona reale l'ha autorizzata, entro i permessi e revocabile in tempo reale."
         ),

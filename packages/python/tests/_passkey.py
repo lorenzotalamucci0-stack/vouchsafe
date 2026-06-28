@@ -13,7 +13,7 @@ import json
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from agent_passport.jcs import b64url, mandate_hash
+from vouchsafe.jcs import b64url, mandate_hash
 
 
 class SoftwarePasskey:

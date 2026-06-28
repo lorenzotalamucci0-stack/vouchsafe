@@ -1,4 +1,4 @@
-"""agent-passport — command-line client.
+"""vouchsafe — command-line client.
 
 The non-web face of the SDK: an agent (a shell script, a CI job, a Codex/Claude Code run)
 attaches a signed Content Receipt to any output, and anyone verifies it with one command.
@@ -7,8 +7,8 @@ attaches a signed Content Receipt to any output, and anyone verifies it with one
     export AP_TOKEN="$(cat passport.jwt)"
     export AP_AGENT_KEY=agent.pem
 
-    agent-passport sign deliverable.txt > receipt.jwt   # agent side
-    agent-passport verify deliverable.txt receipt.jwt    # anyone — real HTTP revocation check
+    vouchsafe sign deliverable.txt > receipt.jwt   # agent side
+    vouchsafe verify deliverable.txt receipt.jwt    # anyone — real HTTP revocation check
 
 `verify` exits 0 when valid, 1 when not — so it drops into a pipeline as a gate.
 """
@@ -118,7 +118,7 @@ def cmd_verify(args) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="agent-passport", description="Sign and verify agent output receipts.")
+    p = argparse.ArgumentParser(prog="vouchsafe", description="Sign and verify agent output receipts.")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     g = sub.add_parser("keygen", help="generate an agent Ed25519 key (its did:key is the agent identity)")

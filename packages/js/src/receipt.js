@@ -7,7 +7,7 @@ import { signCompactJws, verifyCompactJws } from "./ed25519.js";
 import { verify } from "./index.js";
 
 const RECEIPT_TYPE = ["VerifiableCredential", "ContentReceipt"];
-const VC_CONTEXT = ["https://www.w3.org/ns/credentials/v2", "https://agentpassport.dev/v1"];
+const VC_CONTEXT = ["https://www.w3.org/ns/credentials/v2", "https://vouchsafe.dev/v1"];
 
 function bytesToHex(u8) {
   return [...u8].map((b) => b.toString(16).padStart(2, "0")).join("");

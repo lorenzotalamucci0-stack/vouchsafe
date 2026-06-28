@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 VC_CONTEXT = [
     "https://www.w3.org/ns/credentials/v2",
-    "https://agentpassport.dev/v1",
+    "https://vouchsafe.dev/v1",
 ]
 MANDATE_TYPE = ["VerifiableCredential", "AgentMandate"]
 STATUS_TYPE = "AgentPassportStatus"

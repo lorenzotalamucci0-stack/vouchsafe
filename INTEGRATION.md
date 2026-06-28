@@ -1,6 +1,6 @@
-# Integrating Agent Passport — "ok, but how do I actually use it?"
+# Integrating Vouchsafe — "ok, but how do I actually use it?"
 
-Agent Passport is not an app you log into. It is a **wrapper around what your agent already
+Vouchsafe is not an app you log into. It is a **wrapper around what your agent already
 produces**: the agent attaches a signed, revocable receipt to its output, and anyone verifies it.
 This page shows how to put it into a real agent — Claude Code, Codex, an MCP tool, or a plain
 script — in four moves.
@@ -32,7 +32,7 @@ No shared secret: verification needs only the issuer's **public** key. The verif
 cd packages/python && uv pip install -e .
 
 # 1. agent identity (once)
-agent-passport keygen --out agent.pem        # prints the agent's did:key
+vouchsafe keygen --out agent.pem        # prints the agent's did:key
 
 # 2. a human issues a passport for that did:key (once) via the web issuer in server/,
 #    signing with their passkey, then hands the agent the token:
@@ -40,16 +40,16 @@ export AP_AGENT_KEY=agent.pem
 export AP_TOKEN=passport.jwt                  # path or raw JWT
 
 # 3. agent signs whatever it emits
-agent-passport sign deliverable.md > deliverable.md.receipt
+vouchsafe sign deliverable.md > deliverable.md.receipt
 
 # 4. anyone gates on it (exit 0 = ok, 1 = reject; checks revocation over HTTP)
-agent-passport verify deliverable.md deliverable.md.receipt --issuer "$AP_ISSUER" || exit 1
+vouchsafe verify deliverable.md deliverable.md.receipt --issuer "$AP_ISSUER" || exit 1
 ```
 
 ## In code (Python SDK)
 
 ```python
-from agent_passport import sign_receipt, verify_receipt
+from vouchsafe import sign_receipt, verify_receipt
 
 # agent side — token + key come from issuance; scope/mandate_id are read from the token
 receipt = sign_receipt(output_bytes, AP_TOKEN, agent_key, scope="post:linkedin", mandate_id=mid)
@@ -70,7 +70,7 @@ cd packages/python && uv run python ../../examples/standalone.py
 
 | Where | How | Recipe |
 |--|--|--|
-| **Claude Code / Codex / any CLI agent** | `Stop`/`PostToolUse` hook runs `agent-passport sign`; a downstream gate runs `agent-passport verify` | [`integrations/claude-code/`](integrations/claude-code/) (+ runnable `demo_gate.py`) |
+| **Claude Code / Codex / any CLI agent** | `Stop`/`PostToolUse` hook runs `vouchsafe sign`; a downstream gate runs `vouchsafe verify` | [`integrations/claude-code/`](integrations/claude-code/) (+ runnable `demo_gate.py`) |
 | **Agent → agent (A2A)** | the producing agent ships `{output, receipt}`; the consumer calls `verify_receipt` before trusting it | `examples/standalone.py` |
 | **MCP tool** | wrap a tool's response with a receipt; the client verifies before using the result | pattern below (v2 helper planned) |
 | **Human-facing output** | publish the receipt next to the content; anyone pastes both into `/verify.html` | the web verifier in `server/` |

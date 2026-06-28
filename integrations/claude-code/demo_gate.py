@@ -9,13 +9,13 @@ it (accept) -> the human revokes -> the gate rejects the same file. DEV mint (no
 import tempfile
 from pathlib import Path
 
-from agent_passport import verify_receipt
-from agent_passport.devkit import dev_issue
-from agent_passport.receipt import sign_receipt
+from vouchsafe import verify_receipt
+from vouchsafe.devkit import dev_issue
+from vouchsafe.receipt import sign_receipt
 
 
 def gate(deliverable: Path, receipt: Path, *, issuer, resolver) -> bool:
-    """What `agent-passport verify` does: accept only a live, in-scope, authorized output."""
+    """What `vouchsafe verify` does: accept only a live, in-scope, authorized output."""
     result = verify_receipt(deliverable.read_bytes(), receipt.read_text(encoding="ascii"),
                             expected_issuer=issuer, status_resolver=resolver)
     print(f"  gate: {'ACCEPT' if result.valid else 'REJECT (' + str(result.reason) + ')'}  {deliverable.name}")

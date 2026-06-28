@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from agent_passport import verify_receipt
-from agent_passport.cli import main
-from agent_passport.devkit import dev_issue
-from agent_passport.keys import issuer_did, issuer_key_to_pem
-from agent_passport.receipt import sign_receipt
+from vouchsafe import verify_receipt
+from vouchsafe.cli import main
+from vouchsafe.devkit import dev_issue
+from vouchsafe.keys import issuer_did, issuer_key_to_pem
+from vouchsafe.receipt import sign_receipt
 
 
 @pytest.fixture
@@ -75,7 +75,7 @@ def test_cli_sign_malformed_token_exits(tmp_path, passport):
 
 
 def test_cli_sign_rejects_key_token_mismatch(tmp_path, passport):
-    from agent_passport.keys import generate_issuer_key
+    from vouchsafe.keys import generate_issuer_key
     wrong = generate_issuer_key()
     (tmp_path / "wrong.pem").write_bytes(issuer_key_to_pem(wrong))
     (tmp_path / "t.jwt").write_text(passport.token)

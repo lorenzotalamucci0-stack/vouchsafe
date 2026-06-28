@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Agent Passport — demo</title>
+<title>Vouchsafe — demo</title>
 <style>
   :root{
     --bg:#0b0e14; --panel:#141925; --panel2:#0e1320; --line:#222a3a; --txt:#e6e9f0; --mut:#93a0b4;
@@ -126,10 +126,10 @@
 <body>
 <div class="wrap">
 <header>
-  <a class="brand" href="/"><h1>Agent <span class="tag">Passport</span></h1></a>
-  <p class="what"><b>La patente d'identità per gli agenti AI.</b></p>
-  <p class="why">Prova che dietro un bot c'è una <b>persona reale</b> che l'ha autorizzato a fare
-  una cosa precisa, per un tempo preciso — e che puoi <b>spegnere quando vuoi</b>.</p>
+  <a class="brand" href="/"><h1>Vouch<span class="tag">safe</span></h1></a>
+  <p class="what"><b>Lo scontrino revocabile per i contenuti AI.</b></p>
+  <p class="why">Un umano autorizza un agente con la <b>passkey</b>; ogni output porta una <b>prova
+  firmata</b>; e se revochi, la prova <b>smette di valere all'istante</b>.</p>
 
   <div class="lead">
     <a class="chipcard" href="#demo"><b>▶ Prova la demo</b><br><span>5 passi, ~30 secondi</span></a>
@@ -288,7 +288,7 @@
     <li>Paper <b>OpenAI / MIT</b> "Personhood Credentials": mancano norme e standard per gli agenti AI.
       <a href="https://arxiv.org/abs/2408.07892" target="_blank" rel="noopener">arXiv 2408.07892</a></li>
   </ul>
-  <p class="story"><b>Agent Passport risponde a questo:</b> un <b>mandato umano</b> verificabile +
+  <p class="story"><b>Vouchsafe risponde a questo:</b> un <b>mandato umano</b> verificabile +
   <b>revoca</b> in tempo reale + uno <b>scontrino</b> firmato sull'output. Non reinventa l'identità:
   aggiunge la parte che manca — <b>responsabilità e controllo</b>.</p>
 </section>
@@ -296,7 +296,7 @@
 <!-- PER SVILUPPATORI -->
 <section class="info" id="dev" style="margin-top:14px">
   <h2>Per sviluppatori — mettilo nel tuo agente</h2>
-  <p class="story">Agent Passport non è un'app in cui fai login: è un <b>wrapper</b> attorno a ciò
+  <p class="story">Vouchsafe non è un'app in cui fai login: è un <b>wrapper</b> attorno a ciò
   che il tuo agente già produce. L'agente firma il suo output, <b>chiunque</b> lo verifica — e se
   revochi il mandato, quell'output smette di valere all'istante. Funziona con Claude Code, Codex,
   un tool MCP o un semplice script.</p>
@@ -314,8 +314,8 @@
   <label style="margin-top:14px">Lato agente + lato ricevente, 2 righe</label>
   <pre style="margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
     padding:13px 14px;overflow-x:auto;font:13px/1.7 var(--mono);color:var(--txt)"># shell — l'agente firma, chiunque fa da gate (exit 1 = rifiuto)
-agent-passport sign report.md > report.md.receipt
-agent-passport verify report.md report.md.receipt --issuer $AP_ISSUER || exit 1
+vouchsafe sign report.md > report.md.receipt
+vouchsafe verify report.md report.md.receipt --issuer $AP_ISSUER || exit 1
 
 # python — stesso flusso nel codice
 receipt = sign_receipt(output, AP_TOKEN, agent_key, scope="post:linkedin", mandate_id=mid)

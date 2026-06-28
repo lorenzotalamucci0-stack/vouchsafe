@@ -1,7 +1,9 @@
-# Agent Passport — Concept / PRD
+# Vouchsafe — Concept / PRD
 
-**Una patente verificabile e revocabile per agenti AI.**
-*Prova che un bot agisce per conto di un umano reale autorizzato — scope, scadenza, revoca.*
+**Lo scontrino revocabile per i contenuti AI.**
+*Un umano autorizza un agente con la passkey; ogni output porta una prova firmata; la revoca la
+uccide in tempo reale. Il fossato (cosa non fa nessuno sui contenuti): la **revoca che invalida lo
+scontrino live** — Signet è immutabile, C2PA è statico, AP2 è pagamenti.*
 
 ---
 

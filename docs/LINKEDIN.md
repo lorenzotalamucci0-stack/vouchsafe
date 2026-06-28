@@ -1,51 +1,41 @@
-# Bozza post LinkedIn — Agent Passport
+# Bozza post LinkedIn — Vouchsafe
 
-> Onestà: pubblicalo come "problema che sto esplorando / prototipo che sto costruendo", NON come
-> "ho risolto il futuro". Credibilità > hype (protegge la tua reputazione). Idealmente allega lo
-> screenshot/video della demo quando c'è (la demo È il post). Sotto, 3 hook + il corpo.
+> Onestà: pubblicalo come "problema che sto esplorando / prototipo", NON come "ho risolto il futuro".
+> Credibilità > hype. Il media principale è la demo della **ricevuta che muore alla revoca**.
 >
 > **Media pronti** (in `docs/media/`):
-> - `demo.gif` — flusso completo ~16s: mandato valido ✓ → azione fuori-scope rifiutata → **revoca → rifiuto all'istante**. È il media principale del post.
-> - `01-valid.png` / `02-scope-denied.png` / `03-revoked.png` — i 3 frame chiave, se preferisci il carosello alla GIF.
-> Caption suggerita: *"Stesso agente, stesso token. Prima della revoca: ✓. Dopo: ✗ in tempo reale. Nessun login, solo un mandato umano verificabile."*
->
-> **Pilastro 2 (post di follow-up)** — `demo-receipt.gif`: la "ricevuta del contenuto". Stesso
-> contenuto + ricevuta → revochi il mandato → la ricevuta passa da VALIDA a REVOCATA all'istante.
-> Hook: *"E se ogni output di un agente AI portasse uno scontrino firmato — che puoi spegnere?"*
+> - `demo-receipt.gif` — il cuore: contenuto + ricevuta VALIDA → revochi → **REVOCATA all'istante**. Media principale.
+> - `demo.gif` — il mandato: azione valida → revoca → rifiuto live. Secondario / carosello.
+> Caption: *"Stesso contenuto, stessa ricevuta. Prima della revoca: ✓. Dopo: ✗ in tempo reale."*
 
 ## Hook (scegline uno)
-1. *Continuiamo a chiedere agli agenti AI "sei umano?". È la domanda sbagliata.*
-2. *Più del 50% del traffico di internet ora è bot. Il problema non è bloccarli — è sapere chi li ha autorizzati.*
-3. *L'economia degli agenti ha un collo di bottiglia, e non è l'intelligenza. È l'identità.*
+1. *Un agente AI ha scritto questo. Chi l'ha autorizzato — ed è ancora valido?*
+2. *Marcare un contenuto come "fatto da AI" è facile. Provare CHI l'ha autorizzato, e poterlo spegnere, no.*
+3. *E se ogni output di un agente AI portasse uno scontrino firmato che puoi revocare?*
 
 ## Corpo
 
-Più del **50% del traffico di internet è ormai fatto da bot**, e il traffico degli agenti AI è
-cresciuto del **450% in un anno**. La nostra unica difesa? Il CAPTCHA — "sei umano?". Una corsa
-che stiamo perdendo: l'AI li risolve meglio di noi.
+Gli agenti AI scrivono, postano, agiscono al posto nostro. La domanda di oggi — *"questo è
+generato da AI?"* — è quella che già risolvono il watermarking e C2PA. Ma ne manca una più utile:
 
-Credo che stiamo facendo la domanda sbagliata.
+**"chi ha autorizzato questo output, per fare cosa, ed è ancora valido adesso?"**
 
-Davanti a un agente AI che agisce — compra, posta, parla con altri agenti — la domanda utile non
-è *"sei umano?"*, è: **"hai il mandato di una persona reale per fare questo, e quel permesso è
-ancora valido?"**
+Sto costruendo **Vouchsafe**: una persona autorizza un agente firmando con la sua **passkey**; ogni
+output dell'agente porta una **ricevuta firmata** legata a quell'autorizzazione; e se la persona
+**revoca**, la ricevuta **smette di valere all'istante**.
 
-Sto esplorando un'idea che chiamo **Agent Passport**: una specie di **patente verificabile e
-revocabile per gli agenti AI**. Una persona reale firma un mandato — *cosa* può fare l'agente,
-*per quanto*, e con un pulsante per **revocarlo in qualsiasi momento**. Chiunque può verificarlo,
-senza dover sapere chi sei. Non reinventa l'identità: si appoggia a quella che hai già (passkey,
-ecc.). Aggiunge la parte che oggi manca: **responsabilità + revoca**.
+Il pezzo che non ho trovato in nessun altro: la **revoca che uccide lo scontrino, in tempo reale,
+sui contenuti**. I sistemi di provenienza (C2PA) sono *foto immutabili del passato*; gli audit-log
+firmati per agenti (Signet) restano *validi per sempre*; il mandato-con-passkey di Google AP2 vive
+*nei pagamenti*. Vouchsafe mette le tre cose insieme — consenso umano + scontrino sul contenuto +
+revoca viva — ed è eseguibile in locale in pochi comandi.
 
-Non è ancora un prodotto, e sono onesto su una cosa: **non ho inventato un nuovo standard.** Google
-(AP2, ora donato alla **FIDO Alliance**), il protocollo AIP (IETF draft) e UCAN stanno già
-standardizzando il "mandato agentico come credenziale verificabile" — root umana, scope, revoca
-sono già lì. Quello che ho costruito è una cosa più modesta e, credo, utile: una **reference
-implementation neutrale, eseguibile in 3 comandi**, che mette insieme in *un solo flusso provabile*
-ciò che oggi è sparso tra spec e partner — umano firma → l'agente produce → chiunque verifica →
-revoca live — più uno **scontrino firmato del contenuto** legato a quel mandato. Complementare a
-quegli standard, non in concorrenza.
+Sono onesto su due cose. **Non è un nuovo standard**: mandato, delega e revoca esistono già
+(AP2/FIDO, AIP, UCAN). E **non ti rende "conforme all'EU AI Act Art. 50" da solo** — Art.50 chiede
+il *marking*; Vouchsafe aggiunge il layer di **accountability** che gli sta accanto: chi ha
+autorizzato, con che scope, ancora valido. Utile proprio dal 2 agosto 2026.
 
-Ci sto lavorando, open source (Apache-2.0), e nel repo dichiaro anche i **limiti** (la passkey
-firma un hash opaco; la non-trasferibilità del root resta aperta). Curioso di sapere cosa ne pensate. 👇
+Open source (Apache-2.0). Nel repo dichiaro anche i limiti (la passkey firma un hash opaco; la
+non-trasferibilità del root resta aperta). Curioso di sapere cosa ne pensate. 👇
 
-#AI #AIagents #Identity #Crypto #FutureOfWork
+#AI #AIagents #AIGovernance #EUAIAct #ContentAuthenticity

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from agent_passport import generate_issuer_key, human_id_from_public_key, verify_human_proof
-from agent_passport.jcs import b64url, canonicalize, mandate_hash, sha256
-from agent_passport.status import http_status_resolver
+from vouchsafe import generate_issuer_key, human_id_from_public_key, verify_human_proof
+from vouchsafe.jcs import b64url, canonicalize, mandate_hash, sha256
+from vouchsafe.status import http_status_resolver
 
 from _passkey import SoftwarePasskey
 

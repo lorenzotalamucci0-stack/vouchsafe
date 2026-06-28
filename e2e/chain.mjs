@@ -25,7 +25,7 @@ await client.send("WebAuthn.addVirtualAuthenticator", { options: { protocol: "ct
 const waitV = (sel, t) => page.locator(`${sel} .verdict`).filter({ hasText: t }).first().waitFor({ timeout: 8000 });
 
 await page.goto(BASE);
-check("page loaded", (await page.title()).includes("Agent Passport"));
+check("page loaded", (await page.title()).includes("Vouchsafe"));
 await page.getByRole("button", { name: /Crea passaporto/ }).click();
 await waitV("#out-register", "Passaporto creato"); check("register", true);
 await page.getByRole("button", { name: /Firma il mandato/ }).click();

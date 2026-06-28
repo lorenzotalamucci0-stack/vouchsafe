@@ -5,7 +5,7 @@ from __future__ import annotations
 import jwt
 import pytest
 
-from agent_passport import (
+from vouchsafe import (
     StatusStore,
     build_inner_mandate,
     generate_issuer_key,
@@ -17,7 +17,7 @@ from agent_passport import (
     store_status_resolver,
     verify_chain,
 )
-from agent_passport.verify import _parse_ts
+from vouchsafe.verify import _parse_ts
 
 from _passkey import SoftwarePasskey
 
@@ -101,7 +101,7 @@ def test_revoke_parent_cascades_to_child(world):
 
 
 def test_tampered_child_signature(world):
-    from agent_passport.jcs import b64url, b64url_decode
+    from vouchsafe.jcs import b64url, b64url_decode
     child, _ = _child(world, ["book:flights"])
     h, p, s = child.split(".")
     sb = bytearray(b64url_decode(s)); sb[0] ^= 0x01
@@ -119,7 +119,7 @@ def test_wrong_parent_key_rejected(world):
 def test_child_unknown_format_rejected(world):
     """SPEC §12 in-chain: a child with an unrecognized @context/type is rejected, even if its
     signature (by the real parent agent key) is valid. Guards the domain-separation guarantee."""
-    from agent_passport.jwtvc import sign_vc_jwt
+    from vouchsafe.jwtvc import sign_vc_jwt
     child, _ = _child(world, ["book:flights"])
     payload = jwt.decode(child, options={"verify_signature": False})
     payload["vc"]["@context"] = ["https://evil.example/v9"]   # unknown context

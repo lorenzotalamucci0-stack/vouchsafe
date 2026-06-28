@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
 
-from agent_passport import (  # noqa: E402
+from vouchsafe import (  # noqa: E402
     build_inner_mandate,
     generate_issuer_key,
     human_id_from_public_key,
@@ -20,7 +20,7 @@ from _passkey import SoftwarePasskey  # noqa: E402
 issuer_key = generate_issuer_key()
 agent_key = generate_issuer_key()
 passkey = SoftwarePasskey()
-content = b"Draft post: Agent Passport ships verifiable, revocable mandates. \xf0\x9f\xa4\x96"
+content = b"Draft post: Vouchsafe ships verifiable, revocable mandates. \xf0\x9f\xa4\x96"
 
 inner = build_inner_mandate(
     issuer_did=issuer_did(issuer_key),

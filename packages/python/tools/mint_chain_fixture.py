@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
 
-from agent_passport import (  # noqa: E402
+from vouchsafe import (  # noqa: E402
     build_inner_mandate, generate_issuer_key, human_id_from_public_key,
     issue, issuer_did, sign_child_mandate,
 )

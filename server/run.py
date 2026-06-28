@@ -1,4 +1,4 @@
-"""Launch the Agent Passport demo on the first free port (8000, else OS-assigned).
+"""Launch the Vouchsafe demo on the first free port (8000, else OS-assigned).
 
   python run.py            # picks 8000 if free, otherwise the next free port
   PORT=9000 python run.py  # force a port
@@ -28,7 +28,7 @@ def _free_port(preferred: int) -> int:
 def main() -> None:
     port = int(os.environ.get("PORT", "0")) or _free_port(8000)
     os.environ["AP_BASE_URL"] = f"http://localhost:{port}"
-    print(f"\n  Agent Passport demo →  http://localhost:{port}\n", flush=True)
+    print(f"\n  Vouchsafe demo →  http://localhost:{port}\n", flush=True)
     import uvicorn
 
     uvicorn.run("app:app", host="::", port=port, log_level="warning")

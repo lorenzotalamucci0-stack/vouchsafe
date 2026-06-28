@@ -1,4 +1,4 @@
-# Quickstart — add Agent Passport to your agent in 5 minutes
+# Quickstart — add Vouchsafe to your agent in 5 minutes
 
 Three integration points. Pick the one you are: **verifier** (you receive agent actions),
 **agent** (you carry a mandate), or **issuer** (you mint mandates for humans).
@@ -20,7 +20,7 @@ the mandate hasn't expired, hasn't been revoked, and covers the action.
 ### Python
 
 ```python
-from agent_passport import verify, extract_token
+from vouchsafe import verify, extract_token
 
 def handle_request(headers, action):
     token = extract_token(headers.get("Authorization"))   # "Mandate <jwt>"
@@ -37,7 +37,7 @@ def handle_request(headers, action):
 ### JavaScript (Node 20+ / browser)
 
 ```js
-import { verify, extractToken } from "agent-passport";
+import { verify, extractToken } from "vouchsafe";
 
 const token = extractToken(req.headers.authorization);
 const result = await verify(token, {
@@ -58,13 +58,13 @@ offline. On a status-endpoint error it fails **closed** by default (`failClosed:
 Carry the token and present it on every action:
 
 ```python
-from agent_passport import present
+from vouchsafe import present
 headers = present(my_token)        # {"Authorization": "Mandate <jwt>"}
 requests.post("https://tool/api", headers=headers, json={"action": "post:linkedin"})
 ```
 
 ```js
-import { present } from "agent-passport";
+import { present } from "vouchsafe";
 fetch(url, { headers: present(myToken), method: "POST", body });
 ```
 
@@ -77,8 +77,8 @@ issuer fixes the fields *before* the human signs). See `server/app.py` for the f
 core is:
 
 ```python
-from agent_passport import build_inner_mandate, issue, issuer_did
-from agent_passport.jcs import b64url, mandate_hash
+from vouchsafe import build_inner_mandate, issue, issuer_did
+from vouchsafe.jcs import b64url, mandate_hash
 
 # 1. Build the inner mandate and hand its hash to the browser as the WebAuthn challenge.
 inner = build_inner_mandate(
@@ -102,7 +102,7 @@ version of `navigator.credentials.create` (register) and `.get` (sign the challe
 ### Revocation
 
 ```python
-from agent_passport import revoke, StatusStore
+from vouchsafe import revoke, StatusStore
 revoke(mandate_id, StatusStore("status.json"))   # the agent is rejected on its next action
 ```
 
@@ -116,7 +116,7 @@ mandate invalidates the receipt in real time.
 ### Agent side — sign the receipt over the output
 
 ```python
-from agent_passport import sign_receipt
+from vouchsafe import sign_receipt
 output = b"...the exact bytes your agent produced..."
 receipt = sign_receipt(
     output, mandate_token, agent_key,   # agent_key's did:key MUST be the mandate subject
@@ -127,7 +127,7 @@ receipt = sign_receipt(
 ```
 
 ```js
-import { signReceipt } from "agent-passport";
+import { signReceipt } from "vouchsafe";
 const receipt = await signReceipt(outputBytes, mandateToken,
   { privateKey: agentKey, agentDid, scope: "post:linkedin", mandateId });
 ```
@@ -135,13 +135,13 @@ const receipt = await signReceipt(outputBytes, mandateToken,
 ### Consumer side — verify a receipt against the bytes
 
 ```python
-from agent_passport import verify_receipt
+from vouchsafe import verify_receipt
 r = verify_receipt(output, receipt, expected_issuer="did:key:z6Mk...")
 # r.valid, r.reason ("outputHash" | "notRevoked" | "scope" | "agentBinding" | ...), r.checks
 ```
 
 ```js
-import { verifyReceipt } from "agent-passport";
+import { verifyReceipt } from "vouchsafe";
 const r = await verifyReceipt(outputBytes, receipt, { expectedIssuer: "did:key:z6Mk..." });
 ```
 

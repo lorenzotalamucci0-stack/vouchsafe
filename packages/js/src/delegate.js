@@ -6,7 +6,7 @@ import { didToRawEd25519 } from "./didkey.js";
 import { signCompactJws, verifyCompactJws } from "./ed25519.js";
 import { verify } from "./index.js";
 
-const VC_CONTEXT = ["https://www.w3.org/ns/credentials/v2", "https://agentpassport.dev/v1"];
+const VC_CONTEXT = ["https://www.w3.org/ns/credentials/v2", "https://vouchsafe.dev/v1"];
 const MANDATE_TYPE = ["VerifiableCredential", "AgentMandate"];
 
 const payloadOf = (t) => JSON.parse(new TextDecoder().decode(b64uDecode(t.split(".")[1])));
@@ -45,7 +45,7 @@ async function _node(token, requiredScope, depth, opts) {
   let reason = null;
   // SPEC §12: every link — not just the root — MUST be a recognized context/type.
   const ctx = vc["@context"] || [], typ = vc.type || [];
-  if (!(ctx.includes("https://agentpassport.dev/v1") && typ.includes("AgentMandate"))) reason = "recognizedFormat";
+  if (!(ctx.includes("https://vouchsafe.dev/v1") && typ.includes("AgentMandate"))) reason = "recognizedFormat";
   else if (!(iss === ps.id && ps.id === vc.issuer)) reason = "childBinding";
   else if (!subset(cs.scope || [], ps.scope || [])) reason = "scopeNarrowing";
   else if (Date.parse(vc.validUntil) > Date.parse(pvc.validUntil)) reason = "expiryNarrowing";
@@ -64,7 +64,7 @@ async function _node(token, requiredScope, depth, opts) {
 }
 
 // Sign a narrower child mandate (Node). privateKey = parent agent Ed25519 CryptoKey.
-export async function signChildMandate(parentToken, { childAgentId, scope, ttlSeconds, privateKey, parentAgentDid, statusBaseUrl = "https://agentpassport.dev" }) {
+export async function signChildMandate(parentToken, { childAgentId, scope, ttlSeconds, privateKey, parentAgentDid, statusBaseUrl = "https://vouchsafe.dev" }) {
   const pvc = vcOf(parentToken), ps = pvc.credentialSubject;
   if (ps.id !== parentAgentDid) throw new Error("parent key does not match the parent mandate subject");
   if (!scope.length || !subset(scope, ps.scope || [])) throw new Error("child scope must be a non-empty subset of the parent scope");

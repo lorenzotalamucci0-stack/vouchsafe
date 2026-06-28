@@ -1,4 +1,4 @@
-# CLAUDE.md — Agent Passport (Know-Your-Agent)
+# CLAUDE.md — Vouchsafe (Know-Your-Agent)
 
 > Progetto di Pampa. Nato dalla sessione di brainstorming del 28 giu 2026 (deep-research su
 > proof-of-personhood → la crepa vera non è "provare un umano" ma **provare il mandato umano di
@@ -34,4 +34,4 @@ e che il permesso è **ancora valido** (revocabile in qualsiasi momento).
 - Sicurezza: passkey/chiavi/credenziali mai hardcoded; identità dalla sessione/firma, mai dal body.
 
 ## Naming
-Working name: **Agent Passport**. Alt: "KYA — Know Your Agent", "Patente Agente", "Agent Mandate".
+Working name: **Vouchsafe**. Alt: "KYA — Know Your Agent", "Patente Agente", "Agent Mandate".

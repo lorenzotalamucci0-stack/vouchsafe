@@ -18,12 +18,12 @@ from dataclasses import dataclass
 # deliberately (AP_ALLOW_DEVKIT=1). Elsewhere, a loud warning marks any accidental import.
 if os.environ.get("AP_ENV", "").lower() in {"production", "prod"} and os.environ.get("AP_ALLOW_DEVKIT") != "1":
     raise ImportError(
-        "agent_passport.devkit is DEV-ONLY and refuses to load with AP_ENV=production. "
+        "vouchsafe.devkit is DEV-ONLY and refuses to load with AP_ENV=production. "
         "In production a real human signs with their passkey via the issuer UI. "
         "Set AP_ALLOW_DEVKIT=1 only if you really know why."
     )
 warnings.warn(
-    "agent_passport.devkit mints mandates without a real human — DEV/examples/tests only.",
+    "vouchsafe.devkit mints mandates without a real human — DEV/examples/tests only.",
     stacklevel=2,
 )
 

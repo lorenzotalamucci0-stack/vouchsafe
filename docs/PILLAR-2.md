@@ -1,11 +1,11 @@
 # Pilastro 2 — Agent-Attributed Content Provenance (la "ricevuta del contenuto")
 
-> Estensione di Agent Passport. **NON è un progetto nuovo, NON va costruito ora.** È la **FASE
+> Estensione di Vouchsafe. **NON è un progetto nuovo, NON va costruito ora.** È la **FASE
 > SUCCESSIVA**: si fa DOPO che il Pilastro 1 (il mandato) funziona, perché riusa la stessa
 > identica infrastruttura (W3C Verifiable Credentials + DID). Emerso dal deep-dive del 28 giu 2026.
 
 ## I due pilastri (la visione)
-- **Pilastro 1 — Agent Passport**: *questo agente è autorizzato da un umano?* (il mandato firmato,
+- **Pilastro 1 — Vouchsafe**: *questo agente è autorizzato da un umano?* (il mandato firmato,
   revocabile, con scope + scadenza).
 - **Pilastro 2 — Content Receipt**: *questo contenuto/azione l'ha prodotto un agente autorizzato?*
   Una "ricevuta" firmata allegata all'output dell'agente.
@@ -29,7 +29,7 @@ entro quale scope, ed era autorizzato?"*
 - **Legge che lo impone**: EU AI Act **Art. 50 (ago 2026)** + India IT Rules 2026 + California SB942
   → disclosure machine-readable dei contenuti AI. Un agente che pubblica in UE dovrà provare
   disclosure + mandato → **domanda forzata**.
-- **Campo vuoto ma validato**: l'unico tentativo affine (Agent Passport System / APS) ha 33★ ed è
+- **Campo vuoto ma validato**: l'unico tentativo affine (Vouchsafe System / APS) ha 33★ ed è
   stato rifiutato → idea regge, nessuno l'ha occupata.
 - **Riuso**: stesso VC/DID del Pilastro 1, formato allineato a Google AP2 (interoperi, non competi).
   Sforzo = MEDIO.

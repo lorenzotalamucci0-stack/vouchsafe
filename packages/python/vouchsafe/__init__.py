@@ -1,4 +1,4 @@
-"""Agent Passport — a verifiable, revocable mandate for AI agents.
+"""Vouchsafe — a verifiable, revocable mandate for AI agents.
 
 Public API:
     build_inner_mandate  — assemble the inner mandate (issuer fixes fields before signing)

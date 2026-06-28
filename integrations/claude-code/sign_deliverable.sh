@@ -6,4 +6,4 @@
 # this value. Treat it like a filename you'd pass to `rm`.
 set -eu
 : "${AP_DELIVERABLE:?set AP_DELIVERABLE to the file to sign}"
-exec agent-passport sign "$AP_DELIVERABLE" --out "${AP_DELIVERABLE}.receipt"
+exec vouchsafe sign "$AP_DELIVERABLE" --out "${AP_DELIVERABLE}.receipt"

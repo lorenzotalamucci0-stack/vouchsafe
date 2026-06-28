@@ -1,4 +1,4 @@
-"""Exceptions for the Agent Passport SDK."""
+"""Exceptions for the Vouchsafe SDK."""
 
 from __future__ import annotations
 
