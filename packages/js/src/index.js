@@ -147,6 +147,9 @@ export async function verify(token, opts = {}) {
   return finalize({ degraded, mandate: credential });
 }
 
+// Content Receipt (Pilastro 2).
+export { signReceipt, verifyReceipt } from "./receipt.js";
+
 // Revoke via the issuer's /revoke endpoint.
 export async function revoke(mandateId, { baseUrl }) {
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/revoke`, {

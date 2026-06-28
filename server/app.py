@@ -17,7 +17,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agent_passport import (
     StatusStore,
@@ -30,8 +30,10 @@ from agent_passport import (
     issuer_key_to_pem,
     load_issuer_key,
     revoke,
+    sign_receipt,
     store_status_resolver,
     verify,
+    verify_receipt,
 )
 
 HERE = Path(__file__).parent
@@ -42,9 +44,9 @@ RP_ID = "localhost"
 BASE_URL = os.environ.get("AP_BASE_URL", "http://localhost:8000")
 
 
-def _load_or_create_issuer():
+def _load_or_create_key(name: str):
     KEYS_DIR.mkdir(exist_ok=True)
-    pem_path = KEYS_DIR / "issuer_ed25519.pem"
+    pem_path = KEYS_DIR / name
     if pem_path.exists():
         return load_issuer_key(pem_path.read_bytes())
     key = generate_issuer_key()
@@ -52,8 +54,11 @@ def _load_or_create_issuer():
     return key
 
 
-ISSUER_KEY = _load_or_create_issuer()
+ISSUER_KEY = _load_or_create_key("issuer_ed25519.pem")
 ISSUER_DID = issuer_did(ISSUER_KEY)
+# The agent holds a PERSISTENT key: its did:key is the mandate subject and signs receipts.
+AGENT_KEY = _load_or_create_key("agent_ed25519.pem")
+AGENT_DID = issuer_did(AGENT_KEY)
 DATA_DIR.mkdir(exist_ok=True)
 STORE = StatusStore(DATA_DIR / "status.json")
 RESOLVER = store_status_resolver(STORE)
@@ -101,7 +106,13 @@ class RevokeBody(BaseModel):
 
 
 class ActBody(BaseModel):
-    action: str
+    action: str = Field(max_length=128)
+
+
+class VerifyReceiptBody(BaseModel):
+    # Bounded to keep the public verify endpoint from hashing/parsing unbounded input (DoS).
+    content: str = Field(max_length=65536)
+    receipt: str = Field(max_length=16384)
 
 
 # ---------- routes ----------
@@ -136,11 +147,9 @@ def mandate_challenge(body: ChallengeBody):
         return JSONResponse({"error": f"unsupported scope(s): {unknown or 'empty'}"}, status_code=400)
     if not (0 < body.ttlSeconds <= MAX_TTL_SECONDS):
         return JSONResponse({"error": f"ttlSeconds must be in 1..{MAX_TTL_SECONDS}"}, status_code=400)
-    # Mint a fresh did:key identity for the agent.
-    agent_id = issuer_did(generate_issuer_key())
     inner = build_inner_mandate(
         issuer_did=ISSUER_DID,
-        agent_id=agent_id,
+        agent_id=AGENT_DID,          # the persistent agent identity (signs receipts)
         agent_name=body.agentName,
         scope=body.scope,
         human_id=body.humanId,
@@ -227,10 +236,88 @@ async def agent_act(body: ActBody, request: Request):
         "checks": result.checks,
         "degraded": result.degraded,
     }
+    if not result.valid:
+        return JSONResponse(payload, status_code=403)
+
+    # Authorized → produce content and attach a signed Content Receipt (Pilastro 2).
+    agent_name = result.mandate["credentialSubject"]["agentName"]
+    content = _draft_content(body.action, agent_name)
+    mandate_id = result.mandate["id"]
+    receipt = sign_receipt(
+        content.encode("utf-8"), token, AGENT_KEY, scope=body.action, mandate_id=mandate_id
+    )
+    payload["message"] = f"✓ Agent performed '{body.action}' on behalf of its human."
+    payload["content"] = content
+    payload["receipt"] = receipt
+    return payload
+
+
+def _draft_content(action: str, agent_name: str) -> str:
+    """The agent's deliverable for an action (the bytes the receipt is signed over)."""
+    drafts = {
+        "post:linkedin": (
+            "Just shipped Agent Passport — verifiable, revocable mandates for AI agents. "
+            "Every action an agent takes can now carry a signed receipt proving a real human "
+            "authorized it, within scope, revocable in real time. The trust layer for the agent web."
+        ),
+        "send:email": (
+            "Subject: Booking confirmed\n\nHi — your flight is booked. This message was produced "
+            "by an authorized agent acting under a verifiable human mandate."
+        ),
+        "book:flights": "Flight booking request: MXP→JFK, 2026-07-15, 1 passenger, economy.",
+        "read:calendar": "Calendar digest: 3 meetings today; next free slot 15:00–16:00.",
+    }
+    body = drafts.get(action, f"Output for action '{action}'.")
+    return f"{body}\n\n— produced by {agent_name}"
+
+
+@app.post("/verify-receipt")
+def verify_receipt_endpoint(body: VerifyReceiptBody):
+    """Consumer-side: paste content + receipt, get a plain-language verdict."""
+    result = verify_receipt(
+        body.content.encode("utf-8"),
+        body.receipt,
+        expected_issuer=ISSUER_DID,
+        status_resolver=RESOLVER,
+    )
+    rc = result.receipt or {}
+    subject = rc.get("credentialSubject", {})
+    human_id = None
+    if result.mandate and result.mandate.mandate:
+        human_id = result.mandate.mandate["credentialSubject"]["authorizedBy"]["humanId"]
+    summary = _receipt_summary(result, subject, human_id)
+    return {
+        "valid": result.valid,
+        "reason": result.reason,
+        "checks": result.checks,
+        "degraded": result.degraded,
+        "summary": summary,
+        "agentId": subject.get("agentId"),
+        "humanId": human_id,
+        "scope": subject.get("scope"),
+        "producedAt": subject.get("producedAt"),
+    }
+
+
+def _receipt_summary(result, subject: dict, human_id: str | None) -> str:
+    agent = subject.get("agentId", "?")
+    scope = subject.get("scope", "?")
+    human = (human_id or "?")[:48]
     if result.valid:
-        payload["message"] = f"✓ Agent performed '{body.action}' on behalf of its human."
-        return payload
-    return JSONResponse(payload, status_code=403)
+        return (f"VALIDO — prodotto dall'agente {agent[:24]}…, sotto mandato umano {human}…, "
+                f"scope '{scope}'. Firma, contenuto, mandato e revoca: tutti verificati.")
+    reasons = {
+        "receiptSignature": "la firma della ricevuta non è valida (contenuto/ricevuta manomessi).",
+        "outputHash": "il contenuto NON corrisponde alla ricevuta (è stato modificato).",
+        "agentBinding": "l'agente della ricevuta non combacia con il mandato.",
+        "notRevoked": "il mandato è stato REVOCATO — la ricevuta non è più valida.",
+        "notExpired": "il mandato era scaduto al momento della verifica.",
+        "scope": "l'azione è fuori dallo scope autorizzato dal mandato.",
+        "issuerSignature": "la firma dell'issuer del mandato non è valida.",
+        "humanProof": "la prova umana (passkey) del mandato non è valida.",
+        "trustedIssuer": "il mandato non proviene dall'issuer atteso.",
+    }
+    return f"NON VALIDO — {reasons.get(result.reason, result.reason)}"
 
 
 app.mount("/", StaticFiles(directory=STATIC), name="static")

@@ -149,16 +149,54 @@ $("btn-act").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json", "Authorization": `Mandate ${state.token}` },
       body: JSON.stringify({ action }),
     });
-    renderResult("out-act", await res.json(), res.status);
+    const data = await res.json();
+    renderResult("out-act", data, res.status);
+    // On success the agent produced content + a signed receipt → prefill the verify box.
+    if (data.ok && data.receipt) {
+      $("rc-content").value = data.content;
+      $("rc-receipt").value = data.receipt;
+      $("btn-verify-content").disabled = false;
+      show("out-verify", `<span class="pill ok">ricevuta pronta</span> premi "Verifica contenuto + ricevuta".`);
+    }
   } catch (e) {
     show("out-act", `<span class="pill bad">errore</span> ${e.message || e}`);
   }
 });
 
-// ---- Step 4: revoke ----
+// ---- Step 4: verify content + receipt (consumer side) ----
+const RECEIPT_ORDER = ["receiptSignature", "receiptClaims", "outputHash", "agentBinding",
+  "issuerSignature", "trustedIssuer", "humanProof", "notExpired", "notRevoked", "scope"];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function renderReceiptVerdict(id, res) {
+  const c = res.checks || {};
+  const items = RECEIPT_ORDER.map((k) => {
+    if (!(k in c)) return `<li class="skip">○ ${k} <span class="muted">(non valutato)</span></li>`;
+    return `<li class="${c[k] ? "y" : "n"}">${c[k] ? "✓" : "✗"} ${k}</li>`;
+  }).join("");
+  show(id,
+    `<p class="verdict ${res.valid ? "ok" : "bad"}">${res.valid ? "✓ CONTENUTO VALIDO" : `✗ NON VALIDO — ${esc(res.reason)}`}</p>` +
+    `<div>${esc(res.summary)}</div>` +
+    `<ul class="checks">${items}</ul>`);
+}
+
+$("btn-verify-content").addEventListener("click", async () => {
+  try {
+    const { data } = await postJSON("/verify-receipt", {
+      content: $("rc-content").value,
+      receipt: $("rc-receipt").value,
+    });
+    renderReceiptVerdict("out-verify", data);
+  } catch (e) {
+    show("out-verify", `<span class="pill bad">errore</span> ${e.message || e}`);
+  }
+});
+
+// ---- Step 5: revoke ----
 $("btn-revoke").addEventListener("click", async () => {
   const { data } = await postJSON("/revoke", { mandateId: state.mandateId });
   show("out-revoke", data.revoked
-    ? `<span class="pill bad">REVOCATO</span> Ora ri-prova lo step 3 → l'agente viene rifiutato.`
+    ? `<span class="pill bad">REVOCATO</span> Ora ri-verifica il contenuto allo step 4 → la ricevuta è REVOCATA.`
     : `<span class="pill bad">errore</span> ${JSON.stringify(data)}`);
 });

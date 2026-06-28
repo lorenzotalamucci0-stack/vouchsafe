@@ -217,3 +217,68 @@ the first failure.
 
 This document is `v1`. Breaking changes bump the `https://agentpassport.dev/vN` context URL and the
 `AgentMandate` type. Verifiers MUST reject contexts/types they do not understand.
+
+## 13. Content Receipt (Pilastro 2)
+
+A **Content Receipt** is a signed receipt the agent attaches to an output. Where the mandate
+(Pilastro 1) is the *licence*, the receipt is the *till slip*: it answers *which agent produced
+these exact bytes, under which human mandate, within which scope, at what time — and was it
+authorized?* It reuses the same VC/DID/VC-JWT machinery and **embeds the mandate token**, so a
+verifier checks it self-contained (mandate revocation included, live).
+
+### 13.1 Format
+A VC-JWT signed by the **agent** (Ed25519 `did:key`).
+- **Header:** `{ "alg": "EdDSA", "typ": "receipt+jwt", "kid": "<agent did:key>" }`
+- **Payload:** `{ iss: <agentDid>, jti: <receiptId>, sub: <agentDid>, vc: <credential> }` where:
+```jsonc
+{
+  "@context": ["https://www.w3.org/ns/credentials/v2", "https://agentpassport.dev/v1"],
+  "type": ["VerifiableCredential", "ContentReceipt"],
+  "id": "urn:uuid:...",
+  "issuer": "did:key:z…(agent)",
+  "validFrom": "2026-06-28T…Z",
+  "credentialSubject": {
+    "agentId": "did:key:z…(agent)",        // MUST equal the mandate's credentialSubject.id
+    "mandateId": "urn:uuid:…",              // MUST equal the embedded mandate's id
+    "scope": "post:linkedin",               // the action this output is produced for
+    "output": { "hashAlg": "sha-256", "hash": "<hex>", "bytes": 123 },
+    "producedAt": "2026-06-28T…Z"
+  },
+  "mandate": "<passport token (VC-JWT) from §8>"   // embedded for self-contained verification
+}
+```
+
+### 13.2 Output binding
+v1 binds the **exact bytes**: `hash = SHA-256(output_bytes)` (hex), `hashAlg = "sha-256"`. A single
+changed byte breaks `outputHash`. **Perceptual / robust hashing** (surviving image re-encoding,
+whitespace-insensitive text, etc.) is **future work (phase 2.1)** and intentionally NOT in v1.
+
+### 13.3 Verification (order)
+1. **receiptSignature** — EdDSA over the receipt JWS, against the agent `did:key` from `iss`
+   (`alg` pinned to EdDSA; `kid` must match `iss`).
+2. **outputHash** — `SHA-256(output_bytes)` equals `credentialSubject.output.hash`.
+3. **agentBinding** — `iss == credentialSubject.agentId == mandate.credentialSubject.id` **and**
+   `credentialSubject.mandateId == mandate.id`.
+4. **mandate** — the embedded mandate is verified with §9 (`issuerSignature`, `humanProof`,
+   `notExpired`, **`notRevoked`**, `scope == receipt.scope`). Revoking the mandate invalidates the
+   receipt in real time.
+
+`valid` is the AND of all checks; `reason` is the first failure.
+
+### 13.4 Threat model — Content Receipt
+**Proves:** *these exact bytes* were emitted by an agent **authorized** (a live, in-scope, human
+mandate) at time `producedAt`, and not tampered since (any edit breaks `outputHash`; any forgery
+breaks `receiptSignature`/`agentBinding`).
+
+**Does NOT prove (by design):**
+- **The content is true/accurate.** It attests *authorized provenance*, not factual correctness.
+- **Survival of the analog hole.** Re-photographing a screen, re-typing, paraphrasing, or
+  re-encoding produces *different bytes* → the receipt no longer matches. This is a category limit,
+  not a design flaw; robust/perceptual hashing (§13.2) only narrows it, never closes it.
+- **Standalone trust.** A receipt is only as strong as the mandate it embeds — it has no value
+  without Pilastro 1. A leaked output+receipt pair is valid only while the mandate is live (bearer
+  semantics; per-use freshness is application-layer, reserved for v2).
+- **Live authorization, not archival proof.** A receipt asserts *"authorized right now"*: once the
+  mandate expires or is revoked it stops verifying, even for outputs legitimately produced earlier.
+  Historical/audit proof (receipt `validUntil`, `aud`, `nonce`, `producedAt <= mandate.validUntil`,
+  one-time `jti` registry) is reserved for v2.

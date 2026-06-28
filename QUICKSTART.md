@@ -108,10 +108,52 @@ revoke(mandate_id, StatusStore("status.json"))   # the agent is rejected on its 
 
 ---
 
+## 4. Attach a RECEIPT to your agent's output (Pilastro 2) — 5 minutes
+
+A **Content Receipt** binds *these exact output bytes* to the agent's mandate. Revoking the
+mandate invalidates the receipt in real time.
+
+### Agent side — sign the receipt over the output
+
+```python
+from agent_passport import sign_receipt
+output = b"...the exact bytes your agent produced..."
+receipt = sign_receipt(
+    output, mandate_token, agent_key,   # agent_key's did:key MUST be the mandate subject
+    scope="post:linkedin",              # the action this output is for
+    mandate_id=mandate_id,
+)
+# ship `output` + `receipt` together
+```
+
+```js
+import { signReceipt } from "agent-passport";
+const receipt = await signReceipt(outputBytes, mandateToken,
+  { privateKey: agentKey, agentDid, scope: "post:linkedin", mandateId });
+```
+
+### Consumer side — verify a receipt against the bytes
+
+```python
+from agent_passport import verify_receipt
+r = verify_receipt(output, receipt, expected_issuer="did:key:z6Mk...")
+# r.valid, r.reason ("outputHash" | "notRevoked" | "scope" | "agentBinding" | ...), r.checks
+```
+
+```js
+import { verifyReceipt } from "agent-passport";
+const r = await verifyReceipt(outputBytes, receipt, { expectedIssuer: "did:key:z6Mk..." });
+```
+
+A drop-in widget (`server/static/verify.html` → `/verify-receipt`) gives anyone a plain-language
+verdict: *"VALID — produced by agent X, under human mandate Y, scope Z"* / *"✗ mandate REVOKED"*.
+
+---
+
 ## What "done" looks like
 
-- Format spec → [`SPEC.md`](SPEC.md)
+- Format spec → [`SPEC.md`](SPEC.md) (mandate + Content Receipt §13 + Threat model)
 - Python SDK → [`packages/python`](packages/python) · `uv run pytest`
-- JS SDK → [`packages/js`](packages/js) · `node --test` (verifies a Python-issued token)
-- Live demo → [`server`](server) · 5 steps, real passkey, real-time revoke
-- E2E proof → [`e2e`](e2e) · `node run.mjs` (real WebAuthn virtual authenticator)
+- JS SDK → [`packages/js`](packages/js) · `node --test` (verifies a Python-issued token + receipt)
+- Live demo → [`server`](server) · passkey, real-time revoke, content receipt + `/verify.html`
+- E2E proof → [`e2e`](e2e) · `node run.mjs` (mandate) · `node receipt.mjs` (content receipt)

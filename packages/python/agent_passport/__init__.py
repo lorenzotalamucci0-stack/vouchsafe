@@ -20,6 +20,12 @@ from .keys import (
 )
 from .mandate import build_inner_mandate
 from .present import extract_token, present
+from .receipt import (
+    ReceiptVerificationResult,
+    output_hash,
+    sign_receipt,
+    verify_receipt,
+)
 from .revoke import revoke
 from .status import (
     StatusStore,
@@ -38,6 +44,10 @@ __all__ = [
     "extract_token",
     "verify",
     "revoke",
+    "sign_receipt",
+    "verify_receipt",
+    "output_hash",
+    "ReceiptVerificationResult",
     "VerificationResult",
     "StatusStore",
     "http_status_resolver",

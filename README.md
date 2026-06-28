@@ -12,15 +12,26 @@ Allineato a [W3C Verifiable Credentials 2.0](https://www.w3.org/TR/vc-data-model
 
 *Stesso agente, stesso token. Prima della revoca: ✓ azione eseguita. Dopo: ✗ rifiutata in tempo reale.*
 
-## Cosa c'è qui (v1)
+## I due pilastri
+
+1. **Agent Passport (mandato)** — *l'agente è autorizzato da un umano?* La patente, sopra.
+2. **Content Receipt (scontrino)** — *questo output l'ha prodotto un agente autorizzato?* Una
+   **ricevuta firmata** allegata all'output, che lega `hash(output) + agent + mandato + scope + tempo`.
+   Revocare il mandato invalida la ricevuta **in tempo reale**.
+
+![Content Receipt: contenuto valido → revoca → contenuto revocato](docs/media/demo-receipt.gif)
+
+*Stesso contenuto, stessa ricevuta. Revochi il mandato → la ricevuta passa da VALIDA a REVOCATA, senza ri-firmare nulla.*
+
+## Cosa c'è qui
 
 | | Dove | Verifica |
 |--|--|--|
-| 📐 Spec del formato | [`SPEC.md`](SPEC.md) | — |
-| 🐍 SDK Python (`issue`/`present`/`verify`/`revoke`) | [`packages/python`](packages/python) | `uv run pytest` (8 test) |
-| 🟨 SDK JS (Node 20+ / browser) | [`packages/js`](packages/js) | `node --test` (verifica un token emesso da Python) |
-| 🌐 Demo web end-to-end | [`server`](server) | passkey reale, revoca in tempo reale |
-| 🤖 Test E2E (virtual authenticator) | [`e2e`](e2e) | `node run.mjs` |
+| 📐 Spec (mandato + Content Receipt §13 + Threat model) | [`SPEC.md`](SPEC.md) | — |
+| 🐍 SDK Python (`issue`/`verify`/`revoke` + `sign_receipt`/`verify_receipt`) | [`packages/python`](packages/python) | `uv run pytest` (22 test) |
+| 🟨 SDK JS (Node 20+ / browser) | [`packages/js`](packages/js) | `node --test` (11, verifica token + ricevuta da Python) |
+| 🌐 Demo web (passkey, revoca live, ricevuta + `/verify.html`) | [`server`](server) | reale |
+| 🤖 Test E2E (virtual authenticator) | [`e2e`](e2e) | `node run.mjs` · `node receipt.mjs` |
 | 🚀 Integra in 5 minuti | [`QUICKSTART.md`](QUICKSTART.md) | — |
 
 ## Prova la demo (locale, zero costo)

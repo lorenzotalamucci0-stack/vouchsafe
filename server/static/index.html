@@ -22,7 +22,8 @@
   .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:#1d2638;color:var(--acc);font:600 13px/1 var(--mono)}
   .step p{margin:4px 0 12px;color:var(--mut);font-size:13.5px}
   label{display:block;font-size:12.5px;color:var(--mut);margin:10px 0 4px}
-  input[type=text],input[type=number],select{width:100%;background:#0e1320;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font:14px var(--mono)}
+  input[type=text],input[type=number],select,textarea{width:100%;background:#0e1320;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font:14px var(--mono)}
+  textarea{resize:vertical;line-height:1.45}
   .scopes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
   .chk{display:flex;align-items:center;gap:6px;background:#0e1320;border:1px solid var(--line);padding:7px 10px;border-radius:9px;font:13px var(--mono);cursor:pointer}
   .chk input{accent-color:var(--acc)}
@@ -84,13 +85,27 @@
   </section>
 
   <section class="step">
-    <h2><span class="num">4</span> Revoca in tempo reale</h2>
-    <p>Spegni il mandato. Poi ri-prova lo step 3: l'agente viene <b>rifiutato all'istante</b>.</p>
+    <h2><span class="num">4</span> Il contenuto porta una <b>ricevuta firmata</b> (Pilastro 2)</h2>
+    <p>Quando l'agente agisce, produce un <b>output</b> con una <b>ricevuta</b> allegata: lega
+    l'hash del contenuto al mandato. Chiunque può verificarla — anche dopo.</p>
+    <label>Contenuto prodotto dall'agente</label>
+    <textarea id="rc-content" rows="4" spellcheck="false"></textarea>
+    <label>Ricevuta (Content Receipt, VC-JWT)</label>
+    <textarea id="rc-receipt" rows="3" spellcheck="false" placeholder="generata allo step 3"></textarea>
+    <button id="btn-verify-content" disabled>Verifica contenuto + ricevuta</button>
+    <div id="out-verify" class="out"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">5</span> Revoca in tempo reale</h2>
+    <p>Spegni il mandato. Poi ri-verifica il contenuto allo step 4: la ricevuta passa da
+    <b>VALIDO</b> a <b>REVOCATO all'istante</b> — senza ri-firmare nulla.</p>
     <button id="btn-revoke" class="danger" disabled>⛔ Revoca il mandato</button>
     <div id="out-revoke" class="out"></div>
   </section>
 
-  <p class="muted">Tutto locale. Spec del formato in <code>SPEC.md</code>, SDK Python/JS in <code>packages/</code>.</p>
+  <p class="muted">Tutto locale. Spec in <code>SPEC.md</code>, SDK in <code>packages/</code>.
+  Widget verifica indipendente: <a href="/verify.html">/verify.html</a>.</p>
 </main>
 <script src="/app.js"></script>
 </body>

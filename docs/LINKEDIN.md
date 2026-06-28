@@ -8,6 +8,10 @@
 > - `demo.gif` — flusso completo ~16s: mandato valido ✓ → azione fuori-scope rifiutata → **revoca → rifiuto all'istante**. È il media principale del post.
 > - `01-valid.png` / `02-scope-denied.png` / `03-revoked.png` — i 3 frame chiave, se preferisci il carosello alla GIF.
 > Caption suggerita: *"Stesso agente, stesso token. Prima della revoca: ✓. Dopo: ✗ in tempo reale. Nessun login, solo un mandato umano verificabile."*
+>
+> **Pilastro 2 (post di follow-up)** — `demo-receipt.gif`: la "ricevuta del contenuto". Stesso
+> contenuto + ricevuta → revochi il mandato → la ricevuta passa da VALIDA a REVOCATA all'istante.
+> Hook: *"E se ogni output di un agente AI portasse uno scontrino firmato — che puoi spegnere?"*
 
 ## Hook (scegline uno)
 1. *Continuiamo a chiedere agli agenti AI "sei umano?". È la domanda sbagliata.*
