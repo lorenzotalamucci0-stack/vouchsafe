@@ -27,11 +27,13 @@ def _free_port(preferred: int) -> int:
 
 def main() -> None:
     port = int(os.environ.get("PORT", "0")) or _free_port(8000)
-    os.environ["AP_BASE_URL"] = f"http://localhost:{port}"
-    print(f"\n  Vouchsafe demo →  http://localhost:{port}\n", flush=True)
+    # In production, AP_BASE_URL (and AP_RP_ID) are set in the environment — don't clobber them.
+    os.environ.setdefault("AP_BASE_URL", f"http://localhost:{port}")
+    host = os.environ.get("HOST", "::")
+    print(f"\n  Vouchsafe demo →  {os.environ['AP_BASE_URL']}\n", flush=True)
     import uvicorn
 
-    uvicorn.run("app:app", host="::", port=port, log_level="warning")
+    uvicorn.run("app:app", host=host, port=port, log_level="warning")
 
 
 if __name__ == "__main__":
