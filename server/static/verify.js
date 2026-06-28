@@ -1,13 +1,14 @@
 // Standalone consumer widget: paste content + receipt -> plain-language verdict.
 
 const ORDER = ["receiptSignature", "receiptClaims", "outputHash", "agentBinding",
-  "issuerSignature", "trustedIssuer", "humanProof", "notExpired", "notRevoked", "scope"];
+  "issuerSignature", "recognizedFormat", "trustedIssuer", "humanProof", "notExpired", "notRevoked", "scope"];
 const CHECK_LABEL = {
   receiptSignature: "Ricevuta firmata dall'agente",
   receiptClaims: "Ricevuta coerente",
   outputHash: "Contenuto non modificato",
   agentBinding: "Agente collegato al mandato",
   issuerSignature: "Mandato emesso da Agent Passport",
+  recognizedFormat: "Formato riconosciuto",
   trustedIssuer: "Emittente riconosciuto",
   humanProof: "Autorizzato da una persona (passkey)",
   notExpired: "Mandato non scaduto",
@@ -20,6 +21,7 @@ const CHECK_WHY = {
   outputHash: "Il contenuto è identico a quello firmato: nessuno l'ha modificato.",
   agentBinding: "Lo scontrino e il mandato parlano dello stesso agente.",
   issuerSignature: "Il mandato è firmato dal servizio Agent Passport.",
+  recognizedFormat: "Il mandato usa un formato che il verificatore conosce.",
   trustedIssuer: "Viene proprio dall'emittente che ti aspetti.",
   humanProof: "Dietro c'è un umano vero (ha firmato con la passkey).",
   notExpired: "Il permesso non è ancora scaduto.",

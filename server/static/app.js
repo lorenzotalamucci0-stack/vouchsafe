@@ -12,7 +12,8 @@ const revokedIds = new Set();
 
 // Plain-language names + one-line "why" for each verification check.
 const CHECK_LABEL = {
-  issuerSignature: "Emesso da Agent Passport", trustedIssuer: "Emittente riconosciuto",
+  issuerSignature: "Emesso da Agent Passport", recognizedFormat: "Formato riconosciuto",
+  trustedIssuer: "Emittente riconosciuto",
   humanProof: "Autorizzato da una persona (passkey)", notExpired: "Mandato non scaduto",
   notRevoked: "Mandato non revocato", scope: "Azione tra i permessi",
   receiptSignature: "Ricevuta firmata dall'agente", receiptClaims: "Ricevuta coerente",
@@ -20,6 +21,7 @@ const CHECK_LABEL = {
 };
 const CHECK_WHY = {
   issuerSignature: "Il mandato è firmato dal servizio Agent Passport: non è un foglietto falso.",
+  recognizedFormat: "Il mandato usa il formato Agent Passport che il verificatore conosce.",
   trustedIssuer: "Viene proprio dall'emittente che ti aspetti, non da un impostore.",
   humanProof: "Dietro c'è un umano vero (ha firmato con la passkey), non un altro bot.",
   notExpired: "Il permesso non è ancora scaduto.",
@@ -238,7 +240,7 @@ $("btn-issue").addEventListener("click", async () => {
 });
 
 // ---- Step 3: agent acts ----
-const MANDATE_ORDER = ["issuerSignature", "trustedIssuer", "humanProof", "notExpired", "notRevoked", "scope"];
+const MANDATE_ORDER = ["issuerSignature", "recognizedFormat", "trustedIssuer", "humanProof", "notExpired", "notRevoked", "scope"];
 $("btn-act").addEventListener("click", async () => {
   try {
     const action = actionEl.value;
@@ -261,7 +263,7 @@ $("btn-act").addEventListener("click", async () => {
 
 // ---- Step 4: verify content + receipt ----
 const RECEIPT_ORDER = ["receiptSignature", "receiptClaims", "outputHash", "agentBinding",
-  "issuerSignature", "trustedIssuer", "humanProof", "notExpired", "notRevoked", "scope"];
+  "issuerSignature", "recognizedFormat", "trustedIssuer", "humanProof", "notExpired", "notRevoked", "scope"];
 $("btn-verify-content").addEventListener("click", async () => {
   try {
     const { data } = await postJSON("/verify-receipt", { content: $("rc-content").value, receipt: $("rc-receipt").value });

@@ -105,6 +105,12 @@ export async function verify(token, opts = {}) {
   const credential = payload.vc;
   if (!credential || !credential.humanProof) throw new Error("token has no embedded credential/humanProof");
 
+  // 1b. Recognized format (SPEC §12): reject contexts/types we don't understand.
+  const ctx = credential["@context"] || [];
+  const typ = credential.type || [];
+  checks.recognizedFormat = ctx.includes("https://agentpassport.dev/v1") && typ.includes("AgentMandate");
+  if (!checks.recognizedFormat) return finalize({ mandate: credential });
+
   // 2. Trusted issuer (only if pinned).
   if (expectedIssuer !== null) {
     checks.trustedIssuer = issuerDid === expectedIssuer;

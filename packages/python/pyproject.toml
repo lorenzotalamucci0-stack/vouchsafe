@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A verifiable, revocable mandate for AI agents — proving a human authorized the agent (scope + expiry + revocation)."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "Lorenzo Talamucci" }]
 dependencies = [
     "cryptography>=42",

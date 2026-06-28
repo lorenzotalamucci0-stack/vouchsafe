@@ -186,6 +186,28 @@ the first failure.
   needing per-action freshness MUST add a nonce or transaction binding at the application layer
   (reserved for v2).
 
+### Honest limits (the ones that bite the central claim)
+- **What the human actually signs is an opaque hash.** The passkey signs `SHA-256(JCS(inner))`, not
+  the human-readable scope. WebAuthn has no "display of what you are signing" (no transaction
+  confirmation in the authenticator). So *informed* consent depends entirely on the **issuer UI**
+  showing the correct scope before calling `navigator.credentials.get()`. A malicious or buggy
+  issuer could show "read calendar" while handing the authenticator the hash of "send money". This
+  is the most serious limitation of the central claim — we state it first. Mitigations are
+  out-of-band (trusted issuer UI, and a future WYSIWYS / structured-signing extension); v1 does not
+  solve it.
+- **Offline revocation is fail-closed, with no grace.** If the issuer's status endpoint is
+  unreachable, the default verifier (`fail_closed=true`) rejects *every* mandate from that issuer —
+  there is no cached "last known good" or grace window in v1. This trades availability for safety by
+  design; deployers needing availability must opt into a cache/grace policy themselves (reserved for
+  v2, e.g. signed short-lived status with a TTL).
+- **Domain separation of the WebAuthn preimage.** The challenge is `SHA-256(JCS(inner))` and the
+  inner object always carries `@context` (`https://agentpassport.dev/v1`) and `type`
+  (`AgentMandate`) as its first canonical members. Those act as the domain separator: a hash
+  produced for any other Agent Passport object (e.g. a Content Receipt, whose `type` differs, or a
+  future credential under a different `@context`) cannot collide with a mandate challenge, so a
+  passkey assertion captured in one context cannot be replayed as a mandate in another. A dedicated
+  `proofPurpose` tag in the preimage is reserved for v2 to make this explicit rather than implicit.
+
 ### Operational requirements for deployers
 - **Revocation must be authenticated.** The revoke action MUST be authorized — only the human who
   authorized the mandate (or the issuer admin) may revoke it — and SHOULD be audit-logged. *The

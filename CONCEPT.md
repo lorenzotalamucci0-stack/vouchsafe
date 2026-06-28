@@ -30,8 +30,11 @@ che sei un umano unico" è un muro: un umano vero può **affittare** la propria 
 - **MCP** e **A2A** (protocolli agente↔tool e agente↔agente) fanno esplodere il numero di agenti
   → ognuno avrà bisogno di una credenziale/mandato verificabile per essere accettato.
 
-Finestra: nascente. Nessuno ha vinto. I primitivi crittografici per farlo bene sono maturi solo
-da poco (post-2022). È il momento di piantare la bandiera sullo **standard**.
+Finestra: nascente ma **non vergine** — Google AP2, AIP, UCAN stanno già standardizzando "mandato
+agentico come VC" (AP2 con 60+ partner). I primitivi crittografici sono maturi solo da poco
+(post-2022). Posizione onesta: **non inventiamo lo standard, ne facciamo una reference
+implementation neutrale e human-rooted** — root umana WebAuthn + scontrino vivente + revoca
+real-time, standalone e zero-infra, mentre i grandi standardizzano la stessa cosa dentro i loro silos.
 
 ## 3. La soluzione (il meccanismo)
 
@@ -66,7 +69,8 @@ dall'agente, controllabile da chiunque, revocabile in qualsiasi momento.
 
 - È un **layer applicativo**, non un root-of-trust → **non serve scala** né istituzioni (a
   differenza di World/Worldcoin). Lo costruisci in **settimane**, non anni.
-- Il valore è **lo standard + l'SDK + l'implementazione di riferimento**, non una rete biometrica.
+- Il valore è la **reference implementation neutrale + l'SDK + la root umana/scontrino sopra
+  standard emergenti**, non una rete biometrica né un nuovo standard da zero.
 - Si aggancia a tutto ciò su cui Pampa già lavora (agenti, Leev): un agente di Leev potrebbe
   **portare un mandato firmato** quando agisce per un cliente.
 

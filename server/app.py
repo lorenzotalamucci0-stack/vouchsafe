@@ -335,7 +335,13 @@ def _receipt_summary(result, subject: dict, human_id: str | None) -> str:
 
 @app.post("/delegate")
 def delegate(body: DelegateBody):
-    """The agent re-delegates a NARROWER mandate to a fresh sub-agent."""
+    """The agent re-delegates a NARROWER mandate to a fresh sub-agent.
+
+    DEMO ONLY: unauthenticated, like /revoke — anyone who holds the parent token could call it.
+    Also, the sub-agent here is just a fresh did:key with NO private key kept server-side: it is
+    illustrative only — it cannot sign Content Receipts nor re-delegate further. A real deployment
+    would authenticate the delegating agent and provision the sub-agent with its own key.
+    """
     unknown = [s for s in body.scope if s not in ALLOWED_SCOPES]
     if not body.scope or unknown:
         return JSONResponse({"error": f"unsupported scope(s): {unknown or 'empty'}"}, status_code=400)

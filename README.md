@@ -53,25 +53,48 @@ indipendente su `/verify.html`.
 
 | | Dove | Verifica reale |
 |--|--|--|
-| 📐 Spec (mandato + Content Receipt §13 + Threat model) | [`SPEC.md`](SPEC.md) | — |
-| 🐍 SDK Python | [`packages/python`](packages/python) | `pytest` · 22 test |
-| 🟨 SDK JS (Node 20+ / browser) | [`packages/js`](packages/js) | `node --test` · 11 (verifica anche token+ricevuta da Python) |
-| 🌐 Demo web (passkey, revoca live, ricevuta, `/verify.html`) | [`server`](server) | reale |
-| 🤖 E2E (WebAuthn virtual authenticator) | [`e2e`](e2e) | `node run.mjs` · `node receipt.mjs` |
+| 📐 Spec (mandato + Content Receipt §13 + delega + Threat model) | [`SPEC.md`](SPEC.md) | — |
+| 🐍 SDK Python | [`packages/python`](packages/python) | `pytest` · 32 test |
+| 🟨 SDK JS (Node 20+ / browser) | [`packages/js`](packages/js) | `node --test` · 14 (verifica token+ricevuta+catena emessi da Python) |
+| 🔗 Catena di delega (sub-mandati più stretti) | [`delegate.py`](packages/python/agent_passport/delegate.py) | nel suite sopra |
+| 🌐 Demo web (passkey, revoca live, ricevuta, delega, `/verify.html`) | [`server`](server) | reale |
+| 🤖 E2E (WebAuthn virtual authenticator) | [`e2e`](e2e) | `node run.mjs` · `receipt.mjs` · `chain.mjs` |
 | 🚀 Integra in 5 minuti | [`QUICKSTART.md`](QUICKSTART.md) | — |
 
 > Sotto il cofano: W3C **Verifiable Credentials 2.0** come VC-JWT, **Ed25519/`did:key`**, e
 > **WebAuthn** usato come firma del mandato. Zero dipendenze esotiche, zero infra.
 
+## Lavoro correlato & come differiamo
+
+Onestà: **non ho inventato lo standard.** I grandi player stanno già standardizzando "mandato
+agentico come Verifiable Credential". Agent Passport è una **reference implementation neutrale e
+human-rooted, standalone/zero-infra**, che mette una **root umana (WebAuthn)** + uno **scontrino
+vivente** sopra standard emergenti — non un nuovo root-of-trust.
+
+| Progetto | Cosa fa | Come differiamo (onesto) |
+|--|--|--|
+| [Google **AP2**](https://github.com/google-agentic-commerce/AP2) (Agent Payments Protocol) | Mandato-come-VC, umano firma con passkey | AP2 è **payment-scoped**. Noi: scope **generico**, standalone, zero-infra, + **content receipt** (assente in AP2). |
+| [**AIP**](https://arxiv.org/abs/2603.24775) (Agent Identity Protocol) | Delega verificabile, capability **attenuate**, catena, revoca | Il nostro data-model è ispirato ad AIP. **La catena di delega NON è nostra novità** (è il cuore di AIP/UCAN). Divergiamo su: **root umana WebAuthn** + **content receipt** (non specificati da AIP). |
+| [**UCAN**](https://github.com/ucan-wg/spec) | Capability JWT delegabili/revocabili/attenuate | UCAN **non** ha root umana e la revoca è *eventually consistent*. Noi: **root umana WebAuthn** + revoca **real-time, fail-closed**. |
+| [**C2PA** / Content Credentials](https://c2pa.org/) | Provenienza del contenuto (citato da EU AI Act Art. 50) | Il nostro Content Receipt **non lo rimpiazza**: aggiunge un binding **ortogonale** = *autorizzazione umana vivente e revocabile*, non solo "fatto da AI". Idealmente: receipt come **assertion dentro un manifest C2PA**. |
+| [ZCAP-LD](https://w3c-ccg.github.io/zcap-spec/) · [macaroons](https://research.google/pubs/pub41892/) · [biscuit](https://www.biscuitsec.org/) · [SPIFFE](https://spiffe.io/) | Capability/identità | **SPIFFE** = identità del *workload*; noi = mandato umano *on-behalf-of* (complementari). **macaroons**: il verifier ha il root-secret → **può forgiare**; noi chiave **pubblica** → chiunque verifica *senza* poter forgiare. ZCAP-LD/biscuit = capability affini, più pesanti o senza root umana. |
+
+**La novità reale e stretta:** (a) **root umana WebAuthn** legata al *mandato esatto*; (b) **content
+receipt** = autorizzazione *vivente* (cade con la revoca); (c) **revoca real-time fail-closed**. Tutto
+il resto è costruito su standard esistenti — e lo dichiariamo.
+
 ## Onestà brutale
 
-Frontiera, scommessa su uno standard — non un incasso domani. **Non risolve la non-trasferibilità
-del root**: un umano può prestare la sua passkey. Diamo *mandato + permessi + revoca*
-(responsabilità), non la prova di essere un umano *unico*. Il Content Receipt non sopravvive
-all'**analog hole** (rifotografi/riscrivi → firma persa) e non prova che il contenuto sia *vero*,
-solo che è stato prodotto da un agente autorizzato. Revoca v1 = endpoint semplice (W3C Bitstring
-Status List + ZK = fase 2, campi già predisposti). Valore iniziale = standard + reference impl +
-posizionamento.
+Frontiera, non un incasso domani. **Non risolve la non-trasferibilità del root**: un umano può
+prestare la sua passkey. Diamo *mandato + permessi + revoca* (responsabilità), non la prova di
+essere un umano *unico*. La passkey firma un **hash opaco**, non lo scope leggibile: il consenso
+informato dipende dalla UI dell'issuer (vedi `SPEC.md` §Threat model — limite più serio, dichiarato).
+Il Content Receipt non sopravvive all'**analog hole** e non prova che il contenuto sia *vero*, solo
+che è stato prodotto da un agente autorizzato. Revoca v1 = endpoint semplice, **fail-closed** senza
+grace (W3C Bitstring Status List + ZK = fase 2). **Posizionamento:** reference implementation
+neutrale e human-rooted, mentre i grandi standardizzano la stessa cosa dentro i loro silos.
+
+Licenza: **Apache-2.0** (vedi [`LICENSE`](LICENSE)) — adatta a uno standard/reference impl (patent grant).
 
 — Idea e architettura: [`CONCEPT.md`](CONCEPT.md) · ricerca: [`docs/RESEARCH.md`](docs/RESEARCH.md) ·
 bozza post: [`docs/LINKEDIN.md`](docs/LINKEDIN.md)

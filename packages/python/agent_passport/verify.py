@@ -81,6 +81,13 @@ def verify(
     if not isinstance(credential, dict) or "humanProof" not in credential:
         raise InvalidTokenError("token has no embedded credential / humanProof")
 
+    # --- 1b. Recognized format (SPEC §12): reject contexts/types we don't understand ---
+    ctx = credential.get("@context") or []
+    typ = credential.get("type") or []
+    checks["recognizedFormat"] = ("https://agentpassport.dev/v1" in ctx) and ("AgentMandate" in typ)
+    if not checks["recognizedFormat"]:
+        return _finalize(checks, mandate=credential)
+
     # --- 2. Trusted issuer (only if the verifier pinned one) ---
     if expected_issuer is not None:
         checks["trustedIssuer"] = issuer_did_str == expected_issuer

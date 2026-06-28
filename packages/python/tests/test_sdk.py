@@ -64,6 +64,7 @@ def test_roundtrip_valid(issuer_key, passkey, tmp_path):
     assert result.valid is True
     assert result.checks == {
         "issuerSignature": True,
+        "recognizedFormat": True,
         "trustedIssuer": True,
         "humanProof": True,
         "notExpired": True,
@@ -144,6 +145,18 @@ def test_issue_rejects_bad_proof(issuer_key, passkey):
     proof = passkey.sign_mandate(inner, corrupt=True)
     with pytest.raises(Exception):
         issue(inner, proof, issuer_key)  # verify_proof=True by default
+
+
+def test_unrecognized_format_rejected(issuer_key, passkey, tmp_path):
+    inner = _make_mandate(issuer_key, passkey)
+    inner["type"] = ["VerifiableCredential", "SomethingElse"]   # type we don't understand
+    proof = passkey.sign_mandate(inner)                          # human signs the mutated inner
+    token = issue(inner, proof, issuer_key)
+    _, resolver = _store_with(inner, tmp_path)
+
+    result = verify(token, status_resolver=resolver)
+    assert result.valid is False
+    assert result.reason == "recognizedFormat"
 
 
 def test_untrusted_issuer(issuer_key, passkey, tmp_path):

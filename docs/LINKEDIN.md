@@ -36,9 +36,12 @@ revocabile per gli agenti AI**. Una persona reale firma un mandato — *cosa* pu
 senza dover sapere chi sei. Non reinventa l'identità: si appoggia a quella che hai già (passkey,
 ecc.). Aggiunge la parte che oggi manca: **responsabilità + revoca**.
 
-Non è ancora un prodotto. È una scommessa su uno standard che — secondo a16z e un recente paper
-di OpenAI/MIT — al mondo degli agenti **servirà presto**, e che ancora non esiste.
+Non è ancora un prodotto. E sono onesto: **non ho inventato lo standard** — Google (AP2), il
+protocollo AIP e UCAN stanno già standardizzando il "mandato agentico". Quello che ho costruito è
+una **reference implementation neutrale e human-rooted**: una **root umana** (la tua passkey) + uno
+**scontrino vivente** + **revoca in tempo reale**, standalone e senza infrastruttura — mentre i
+grandi standardizzano la stessa cosa dentro i loro silos.
 
-Ci sto lavorando. Curioso di sapere cosa ne pensate. 👇
+Ci sto lavorando, open source (Apache-2.0). Curioso di sapere cosa ne pensate. 👇
 
 #AI #AIagents #Identity #Crypto #FutureOfWork

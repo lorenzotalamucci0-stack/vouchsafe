@@ -32,6 +32,7 @@ test("Python-issued token verifies as VALID in JS", async () => {
   assert.equal(result.valid, true, JSON.stringify(result.checks));
   assert.deepEqual(result.checks, {
     issuerSignature: true,
+    recognizedFormat: true,
     trustedIssuer: true,
     humanProof: true,
     notExpired: true,
