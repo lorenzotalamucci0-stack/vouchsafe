@@ -29,32 +29,32 @@ const pause = (ms) => page.waitForTimeout(ms);
 const waitOut = (sel, t) => page.locator(sel).filter({ hasText: t }).first().waitFor({ timeout: 8000 });
 async function verifyContent(verdict) {
   await page.evaluate(() => { document.getElementById("out-verify").innerHTML = ""; });
-  await page.getByRole("button", { name: /Verifica contenuto/ }).click();
+  await page.getByRole("button", { name: /Verifica il contenuto/ }).click();
   await page.locator("#out-verify .verdict").filter({ hasText: verdict }).first().waitFor({ timeout: 8000 });
 }
 
 await page.goto(BASE);
 await pause(900);
 await page.getByRole("button", { name: /Crea passaporto/ }).click();
-await waitOut("#out-register", "human root");
+await waitOut("#out-register", "Passaporto creato");
 await pause(1100);
-await page.getByRole("button", { name: /Genera mandato/ }).click();
-await waitOut("#out-issue", "Mandato emesso");
+await page.getByRole("button", { name: /Firma il mandato/ }).click();
+await waitOut("#out-issue", "Mandato attivo");
 await pause(1300);
 
 await page.locator("#action").selectOption("book:flights");
-await page.getByRole("button", { name: /esegue l'azione/ }).click();
-await waitOut("#out-act", "AZIONE ESEGUITA");
+await page.getByRole("button", { name: /Esegui l'azione/ }).click();
+await waitOut("#out-act", "Azione eseguita");
 await pause(1200);
 await page.locator("#rc-content").scrollIntoViewIfNeeded();
-await verifyContent("CONTENUTO VALIDO");
+await verifyContent("Contenuto valido");
 await pause(2800);
 
 await page.getByRole("button", { name: /Revoca il mandato/ }).click();
-await waitOut("#out-revoke", "REVOCATO");
+await waitOut("#out-revoke", "Mandato revocato");
 await pause(1400);
 await page.locator("#rc-content").scrollIntoViewIfNeeded();
-await verifyContent("notRevoked");
+await verifyContent("revocato");
 await pause(3000);
 
 const videoPath = await page.video().path();

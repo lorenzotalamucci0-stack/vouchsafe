@@ -3,41 +3,56 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Agent Passport — verifica ricevuta</title>
+<title>Agent Passport — verifica una ricevuta</title>
 <style>
-  :root{--bg:#0b0e14;--panel:#141925;--line:#222a3a;--txt:#e6e9f0;--mut:#8b95a8;--acc:#5b8cff;--ok:#34d399;--bad:#f87171;--mono:ui-monospace,Menlo,monospace}
+  :root{--bg:#0b0e14;--panel:#141925;--panel2:#0e1320;--line:#222a3a;--txt:#e6e9f0;--mut:#93a0b4;
+    --acc:#5b8cff;--ok:#34d399;--bad:#f87171;--okbg:rgba(52,211,153,.12);--badbg:rgba(248,113,113,.12);
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,sans-serif}
-  main{max-width:760px;margin:0 auto;padding:32px 24px 60px}
-  h1{font-size:23px;margin:0 0 4px;letter-spacing:-.02em}
+  body{margin:0;background:radial-gradient(1000px 440px at 50% -120px,#121a2e 0%,var(--bg) 70%);
+    color:var(--txt);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden}
+  .wrap{max-width:680px;margin:0 auto;padding:34px 20px 60px}
+  h1{font-size:25px;margin:0 0 4px;letter-spacing:-.02em;font-weight:800}
   h1 .tag{color:var(--acc)}
-  p.sub{color:var(--mut);margin:6px 0 20px}
-  label{display:block;font-size:12.5px;color:var(--mut);margin:14px 0 4px}
-  textarea{width:100%;background:#0e1320;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px 12px;font:13px var(--mono);resize:vertical;line-height:1.45}
-  button{appearance:none;border:0;background:var(--acc);color:#fff;font:600 14px system-ui;padding:11px 18px;border-radius:10px;cursor:pointer;margin-top:16px}
-  .out{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:none}
+  p.sub{color:var(--mut);margin:8px 0 22px}
+  label{display:block;font-size:13px;color:var(--mut);margin:16px 0 5px}
+  textarea{width:100%;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:11px;padding:12px 13px;font:13px var(--mono);resize:vertical;line-height:1.45;word-break:break-all}
+  button{appearance:none;border:0;background:var(--acc);color:#fff;font:600 15px system-ui;padding:12px 20px;
+    border-radius:11px;cursor:pointer;margin-top:18px;transition:filter .15s}
+  button:hover{filter:brightness(1.08)}
+  .out{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:none}
   .out.show{display:block}
-  .verdict{font:700 19px system-ui;margin:0 0 8px}
-  .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
-  .checks{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px;font:13px var(--mono)}
-  .checks .y{color:var(--ok)} .checks .n{color:var(--bad)} .checks .skip{color:var(--mut)}
-  .meta{color:var(--mut);font:12.5px var(--mono);margin-top:10px}
+  .out.ok{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,var(--okbg),transparent)}
+  .out.bad{border-color:rgba(248,113,113,.45);background:linear-gradient(180deg,var(--badbg),transparent)}
+  .verdict{display:flex;align-items:center;gap:12px;font:800 20px/1.2 system-ui;margin:0}
+  .verdict .ico{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:23px}
+  .verdict.ok{color:var(--ok)} .verdict.ok .ico{background:var(--okbg)}
+  .verdict.bad{color:var(--bad)} .verdict.bad .ico{background:var(--badbg)}
+  .saidline{margin:12px 0 0;font-size:14.5px}
+  .meta{color:var(--mut);font:12px var(--mono);margin-top:12px;word-break:break-all}
+  .checks{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px}
+  .checks li{display:flex;align-items:center;gap:9px;font-size:13.5px}
+  .checks .mark{flex:none;width:20px;text-align:center;font-weight:700}
+  .checks .y .mark{color:var(--ok)} .checks .n .mark{color:var(--bad)} .checks .skip{color:var(--mut)}
+  .checks .skip .mark{color:var(--mut)}
   a{color:var(--acc)}
+  @media (max-width:520px){ .wrap{padding:24px 14px} h1{font-size:22px} .verdict{font-size:18px} }
 </style>
 </head>
 <body>
-<main>
-  <h1>Agent <span class="tag">Passport</span> — verifica ricevuta</h1>
-  <p class="sub">Incolla un contenuto e la sua ricevuta. Ti dico chi l'ha prodotto, sotto quale
-  mandato umano, entro quale scope — e se è ancora valido. <a href="/">torna alla demo</a></p>
+<div class="wrap">
+  <h1>Agent <span class="tag">Passport</span> — verifica una ricevuta</h1>
+  <p class="sub">Incolla un <b>contenuto</b> e la sua <b>ricevuta</b>: ti dico chi l'ha prodotto,
+  con il permesso di chi, e se è ancora valido. <a href="/">← torna alla demo</a></p>
 
-  <label>Contenuto (i byte esatti)</label>
-  <textarea id="content" rows="5" spellcheck="false"></textarea>
-  <label>Ricevuta (Content Receipt, VC-JWT)</label>
-  <textarea id="receipt" rows="4" spellcheck="false"></textarea>
+  <label>Contenuto (incolla il testo esatto)</label>
+  <textarea id="content" rows="5" spellcheck="false" placeholder="il contenuto prodotto dall'agente"></textarea>
+  <label>Ricevuta</label>
+  <textarea id="receipt" rows="4" spellcheck="false" placeholder="la stringa della ricevuta firmata"></textarea>
   <button id="btn">Verifica</button>
   <div id="out" class="out"></div>
-</main>
+</div>
 <script src="/verify.js"></script>
 </body>
 </html>

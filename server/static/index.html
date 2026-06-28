@@ -6,107 +6,156 @@
 <title>Agent Passport — demo</title>
 <style>
   :root{
-    --bg:#0b0e14; --panel:#141925; --line:#222a3a; --txt:#e6e9f0; --mut:#8b95a8;
-    --acc:#5b8cff; --ok:#34d399; --bad:#f87171; --warn:#fbbf24;
+    --bg:#0b0e14; --panel:#141925; --panel2:#0e1320; --line:#222a3a; --txt:#e6e9f0; --mut:#93a0b4;
+    --acc:#5b8cff; --ok:#34d399; --bad:#f87171; --okbg:rgba(52,211,153,.12); --badbg:rgba(248,113,113,.12);
     --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
-  header{padding:28px 24px 8px;max-width:920px;margin:0 auto}
-  h1{margin:0;font-size:26px;letter-spacing:-.02em}
-  h1 .tag{color:var(--acc)}
-  .sub{color:var(--mut);margin:6px 0 0}
-  main{max-width:920px;margin:0 auto;padding:16px 24px 60px;display:grid;gap:16px}
-  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
-  .step h2{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
-  .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;background:#1d2638;color:var(--acc);font:600 13px/1 var(--mono)}
-  .step p{margin:4px 0 12px;color:var(--mut);font-size:13.5px}
-  label{display:block;font-size:12.5px;color:var(--mut);margin:10px 0 4px}
-  input[type=text],input[type=number],select,textarea{width:100%;background:#0e1320;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font:14px var(--mono)}
-  textarea{resize:vertical;line-height:1.45}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:radial-gradient(1100px 480px at 50% -120px,#121a2e 0%,var(--bg) 70%);
+    color:var(--txt);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+  header h1{margin:0;font-size:30px;letter-spacing:-.02em;font-weight:800}
+  header h1 .tag{color:var(--acc)}
+  .what{font-size:18px;margin:12px 0 2px}
+  .why{color:var(--mut);margin:2px 0 0}
+  .lead{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+  .lead a{flex:1;min-width:220px;text-decoration:none}
+  .chipcard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;color:var(--txt);transition:border-color .15s,transform .15s}
+  .chipcard:hover{border-color:var(--acc);transform:translateY(-1px)}
+  .chipcard b{color:var(--acc)} .chipcard span{color:var(--mut);font-size:13.5px}
+  .toolbar{display:flex;justify-content:flex-end;margin:14px 0 0}
+  main{display:grid;gap:14px;margin-top:8px}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .step h2{margin:0;font-size:17px;display:flex;align-items:center;gap:10px;font-weight:700}
+  .num{flex:none;display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;
+    background:linear-gradient(180deg,#243150,#1a2336);color:#fff;font:700 14px/1 system-ui}
+  .desc{margin:8px 0 14px;color:var(--mut);font-size:14.5px}
+  label{display:block;font-size:13px;color:var(--mut);margin:12px 0 5px}
+  input[type=text],input[type=number],select,textarea{width:100%;max-width:100%;background:var(--panel2);
+    border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 12px;font:14px var(--mono)}
+  textarea{resize:vertical;line-height:1.45;word-break:break-all}
   .scopes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-  .chk{display:flex;align-items:center;gap:6px;background:#0e1320;border:1px solid var(--line);padding:7px 10px;border-radius:9px;font:13px var(--mono);cursor:pointer}
-  .chk input{accent-color:var(--acc)}
-  button{appearance:none;border:1px solid var(--line);background:var(--acc);color:#fff;font:600 14px system-ui;padding:10px 16px;border-radius:10px;cursor:pointer;margin-top:14px}
-  button.ghost{background:#1a2030;color:var(--txt)}
+  .chk{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+    padding:8px 11px;border-radius:10px;font:13px var(--mono);cursor:pointer;user-select:none}
+  .chk input{accent-color:var(--acc);width:16px;height:16px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+  .row>div{flex:1;min-width:150px}
+  button{appearance:none;border:1px solid transparent;background:var(--acc);color:#fff;
+    font:600 15px system-ui;padding:12px 18px;border-radius:11px;cursor:pointer;margin-top:16px;
+    transition:filter .15s,opacity .15s}
+  button:hover:not(:disabled){filter:brightness(1.08)}
+  button.ghost{background:transparent;border-color:var(--line);color:var(--txt);font-size:13.5px;
+    padding:8px 13px;margin-top:0}
   button.danger{background:var(--bad)}
-  button:disabled{opacity:.45;cursor:not-allowed}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-  .row>div{flex:1;min-width:160px}
-  .out{margin-top:12px;font:12.5px/1.5 var(--mono);color:var(--mut);word-break:break-all;background:#0e1320;border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:none}
-  .out.show{display:block}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font:600 11px var(--mono);margin-right:6px}
-  .pill.ok{background:rgba(52,211,153,.15);color:var(--ok)}
-  .pill.bad{background:rgba(248,113,113,.15);color:var(--bad)}
-  .verdict{font:700 18px system-ui;margin:0 0 8px}
-  .verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
-  .checks{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
-  .checks li{font:13px var(--mono)}
-  .checks .y{color:var(--ok)} .checks .n{color:var(--bad)} .checks .skip{color:var(--mut)}
-  .muted{color:var(--mut);font-size:12px}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  /* output cards + verdicts */
+  .out{margin-top:14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
+    padding:14px 15px;opacity:0;max-height:0;overflow:hidden;transition:opacity .25s ease;
+    font-size:14px}
+  .out.show{opacity:1;max-height:none;overflow:visible}
+  .verdict{display:flex;align-items:center;gap:12px;font:800 19px/1.2 system-ui;margin:0}
+  .verdict .ico{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:22px}
+  .verdict.ok{color:var(--ok)} .verdict.ok .ico{background:var(--okbg)}
+  .verdict.bad{color:var(--bad)} .verdict.bad .ico{background:var(--badbg)}
+  .out.ok{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,var(--okbg),transparent)}
+  .out.bad{border-color:rgba(248,113,113,.45);background:linear-gradient(180deg,var(--badbg),transparent)}
+  .saidline{margin:10px 0 0;color:var(--txt);font-size:14.5px}
+  .checks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+  .checks li{display:flex;align-items:center;gap:9px;font-size:13.5px}
+  .checks .mark{flex:none;width:20px;text-align:center;font-weight:700}
+  .checks .y .mark{color:var(--ok)} .checks .n .mark{color:var(--bad)} .checks .skip{color:var(--mut)}
+  .checks .skip .mark{color:var(--mut)}
+  .tokrow{display:flex;align-items:center;gap:8px;margin-top:10px;font:12px var(--mono);color:var(--mut)}
+  .tokrow code{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:3px 7px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
+  .copy{cursor:pointer;color:var(--acc);font:600 12px system-ui;border:1px solid var(--line);
+    border-radius:7px;padding:3px 9px;background:transparent}
+  .note{color:var(--mut);font-size:13px;margin-top:6px}
+  .foot{margin-top:22px;color:var(--mut);font-size:13px;text-align:center}
   a{color:var(--acc)}
+  @media (max-width:560px){
+    .wrap{padding:24px 14px 48px} header h1{font-size:25px} .what{font-size:16px}
+    .step{padding:15px 15px;border-radius:14px} .verdict{font-size:17px}
+    .tokrow code{max-width:48%}
+  }
 </style>
 </head>
 <body>
+<div class="wrap">
 <header>
   <h1>Agent <span class="tag">Passport</span></h1>
-  <p class="sub">Una patente verificabile e revocabile per agenti AI. Un umano firma con la passkey →
-  l'agente porta il mandato → un endpoint lo accetta <b>solo se vivo</b> → premi <b>revoca</b> e si spegne.</p>
+  <p class="what"><b>La patente d'identità per gli agenti AI.</b></p>
+  <p class="why">Prova che dietro un bot c'è una <b>persona reale</b> che l'ha autorizzato a fare
+  una cosa precisa, per un tempo preciso — e che puoi <b>spegnere quando vuoi</b>.</p>
+
+  <div class="lead">
+    <a class="chipcard" href="#demo"><b>▶ Prova la demo</b><br><span>5 passi, ~30 secondi</span></a>
+    <a class="chipcard" href="/verify.html"><b>🔎 Verifica una ricevuta</b><br><span>controllala tu stesso</span></a>
+  </div>
+  <div class="toolbar"><button class="ghost" id="btn-reset">↻ Ricomincia</button></div>
 </header>
-<main>
+
+<main id="demo">
 
   <section class="step">
-    <h2><span class="num">1</span> Crea il tuo passaporto (passkey)</h2>
-    <p>Registri una passkey nel tuo dispositivo: è la <b>radice umana</b>. Nessuna password, nessun server vede la chiave privata.</p>
-    <button id="btn-register">Crea passaporto con passkey</button>
+    <h2><span class="num">1</span> Crea il tuo passaporto</h2>
+    <p class="desc">Usi l'impronta o il volto del tuo dispositivo (una <b>passkey</b>) come firma.
+    Niente password, niente dati che escono: la chiave resta nel telefono.</p>
+    <button id="btn-register">🔑 Crea passaporto</button>
     <div id="out-register" class="out"></div>
   </section>
 
   <section class="step">
-    <h2><span class="num">2</span> Genera un mandato per un agente</h2>
-    <p>Definisci <b>chi</b> (l'agente), <b>cosa</b> (scope) e <b>per quanto</b> (scadenza). Firmi il mandato con la passkey.</p>
+    <h2><span class="num">2</span> Dai un incarico all'agente</h2>
+    <p class="desc">Scegli <b>cosa</b> può fare l'agente (i permessi) e <b>per quanto</b> tempo.
+    Poi <b>firmi</b> l'incarico con la tua passkey: questo è il <b>mandato</b>.</p>
     <div class="row">
-      <div><label>Nome agente</label><input id="agent-name" type="text" value="Acme Booking Bot" /></div>
-      <div style="max-width:140px"><label>Scadenza (secondi)</label><input id="ttl" type="number" value="300" min="10" /></div>
+      <div><label>Nome dell'agente</label><input id="agent-name" type="text" value="Acme Booking Bot" /></div>
+      <div style="max-width:150px"><label>Scade tra (secondi)</label><input id="ttl" type="number" value="300" min="10" /></div>
     </div>
-    <label>Scope (permessi)</label>
+    <label>Permessi (cosa può fare)</label>
     <div class="scopes" id="scopes"></div>
-    <button id="btn-issue" disabled>Genera mandato (firma con passkey)</button>
+    <button id="btn-issue" disabled>✍️ Firma il mandato</button>
     <div id="out-issue" class="out"></div>
   </section>
 
   <section class="step">
-    <h2><span class="num">3</span> L'agente esegue un'azione</h2>
-    <p>L'agente presenta il mandato all'endpoint protetto <code>/agent/act</code>. Il verifier controlla firma + scadenza + revoca + scope.</p>
-    <label>Azione richiesta dall'agente</label>
+    <h2><span class="num">3</span> L'agente fa qualcosa</h2>
+    <p class="desc">L'agente prova a eseguire un'azione mostrando il mandato. Viene accettato
+    <b>solo se</b> il mandato è valido e quell'azione è tra i permessi.</p>
+    <label>Azione che l'agente prova a fare</label>
     <select id="action"></select>
-    <button id="btn-act" disabled>L'agente esegue l'azione →</button>
+    <button id="btn-act" disabled>▶ Esegui l'azione</button>
     <div id="out-act" class="out"></div>
   </section>
 
   <section class="step">
-    <h2><span class="num">4</span> Il contenuto porta una <b>ricevuta firmata</b> (Pilastro 2)</h2>
-    <p>Quando l'agente agisce, produce un <b>output</b> con una <b>ricevuta</b> allegata: lega
-    l'hash del contenuto al mandato. Chiunque può verificarla — anche dopo.</p>
+    <h2><span class="num">4</span> Il risultato porta una ricevuta</h2>
+    <p class="desc">L'agente non produce solo un contenuto: gli allega una <b>ricevuta firmata</b>.
+    Chiunque può controllarla e sapere chi l'ha prodotto e se era autorizzato — anche dopo.</p>
     <label>Contenuto prodotto dall'agente</label>
-    <textarea id="rc-content" rows="4" spellcheck="false"></textarea>
-    <label>Ricevuta (Content Receipt, VC-JWT)</label>
-    <textarea id="rc-receipt" rows="3" spellcheck="false" placeholder="generata allo step 3"></textarea>
-    <button id="btn-verify-content" disabled>Verifica contenuto + ricevuta</button>
+    <textarea id="rc-content" rows="3" spellcheck="false" placeholder="comparirà dopo lo step 3"></textarea>
+    <label>Ricevuta allegata <span class="note">(la prova firmata)</span></label>
+    <textarea id="rc-receipt" rows="2" spellcheck="false" placeholder="comparirà dopo lo step 3"></textarea>
+    <button id="btn-verify-content" disabled>🔎 Verifica il contenuto</button>
     <div id="out-verify" class="out"></div>
   </section>
 
   <section class="step">
-    <h2><span class="num">5</span> Revoca in tempo reale</h2>
-    <p>Spegni il mandato. Poi ri-verifica il contenuto allo step 4: la ricevuta passa da
-    <b>VALIDO</b> a <b>REVOCATO all'istante</b> — senza ri-firmare nulla.</p>
+    <h2><span class="num">5</span> Cambia idea: revoca</h2>
+    <p class="desc">Spegni il mandato con un clic. Torna allo step 4 e ri-controlla lo
+    <b>stesso</b> contenuto: la ricevuta passa da valida a <b>revocata all'istante</b>.</p>
     <button id="btn-revoke" class="danger" disabled>⛔ Revoca il mandato</button>
     <div id="out-revoke" class="out"></div>
   </section>
 
-  <p class="muted">Tutto locale. Spec in <code>SPEC.md</code>, SDK in <code>packages/</code>.
-  Widget verifica indipendente: <a href="/verify.html">/verify.html</a>.</p>
 </main>
+
+<p class="foot">Tutto gira in locale, gratis. Vuoi controllare una ricevuta da solo?
+→ <a href="/verify.html">apri il verificatore</a></p>
+</div>
 <script src="/app.js"></script>
 </body>
 </html>

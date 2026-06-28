@@ -38,7 +38,7 @@ async function waitText(sel, substr, label) {
 
 async function verifyContent(verdictSubstr, label) {
   await page.evaluate(() => { document.getElementById("out-verify").innerHTML = ""; });
-  await page.getByRole("button", { name: /Verifica contenuto/ }).click();
+  await page.getByRole("button", { name: /Verifica il contenuto/ }).click();
   try {
     await page.locator("#out-verify .verdict").filter({ hasText: verdictSubstr }).first().waitFor({ timeout: 8000 });
     check(label, true);
@@ -46,33 +46,34 @@ async function verifyContent(verdictSubstr, label) {
     const got = await page.locator("#out-verify .verdict").innerText().catch(() => "<none>");
     check(`${label} (verdict: ${JSON.stringify(got)})`, false);
   }
+  await page.waitForTimeout(400); // let the fade-in settle before any screenshot
 }
 
 await page.goto(BASE);
 check("page loaded", (await page.title()).includes("Agent Passport"));
 
 await page.getByRole("button", { name: /Crea passaporto/ }).click();
-await waitText("#out-register", "human root", "register passport");
+await waitText("#out-register", "Passaporto creato", "register passport");
 
-await page.getByRole("button", { name: /Genera mandato/ }).click();
-await waitText("#out-issue", "Mandato emesso", "issue mandate");
+await page.getByRole("button", { name: /Firma il mandato/ }).click();
+await waitText("#out-issue", "Mandato attivo", "issue mandate");
 
 // Agent acts (in-scope) -> content + receipt produced
 await page.locator("#action").selectOption("book:flights");
-await page.getByRole("button", { name: /esegue l'azione/ }).click();
-await waitText("#out-act", "AZIONE ESEGUITA", "agent acted, content produced");
-await waitText("#out-verify", "ricevuta pronta", "receipt prefilled");
+await page.getByRole("button", { name: /Esegui l'azione/ }).click();
+await waitText("#out-act", "Azione eseguita", "agent acted, content produced");
+await waitText("#out-verify", "Ricevuta pronta", "receipt prefilled");
 
 // Verify content+receipt -> VALID
-await verifyContent("CONTENUTO VALIDO", "content+receipt VALID");
+await verifyContent("Contenuto valido", "content+receipt VALID");
 await page.screenshot({ path: path.join(SHOTS, "content-valid.png") });
 
 // Revoke the mandate
 await page.getByRole("button", { name: /Revoca il mandato/ }).click();
-await waitText("#out-revoke", "REVOCATO", "mandate revoked");
+await waitText("#out-revoke", "Mandato revocato", "mandate revoked");
 
 // Re-verify the SAME content+receipt -> now REVOKED, in real time
-await verifyContent("notRevoked", "content REVOKED after revoke (notRevoked)");
+await verifyContent("revocato", "content REVOKED after revoke (revoked)");
 await page.screenshot({ path: path.join(SHOTS, "content-revoked.png") });
 
 await browser.close();

@@ -51,7 +51,7 @@ async function waitText(sel, substr, label) {
 async function act(action, verdictSubstr, label) {
   await page.evaluate(() => { document.getElementById("out-act").innerHTML = ""; });
   await page.locator("#action").selectOption(action);
-  await page.getByRole("button", { name: /esegue l'azione/ }).click();
+  await page.getByRole("button", { name: /Esegui l'azione/ }).click();
   try {
     await page.locator("#out-act .verdict").filter({ hasText: verdictSubstr }).first()
       .waitFor({ timeout: 8000 });
@@ -60,6 +60,7 @@ async function act(action, verdictSubstr, label) {
     const got = await page.locator("#out-act .verdict").innerText().catch(() => "<none>");
     check(`${label} (verdict: ${JSON.stringify(got)})`, false);
   }
+  await page.waitForTimeout(400); // let the fade-in settle before any screenshot
 }
 
 await page.goto(BASE);
@@ -67,26 +68,26 @@ check("page loaded", (await page.title()).includes("Agent Passport"));
 
 // Step 1 — register passkey
 await page.getByRole("button", { name: /Crea passaporto/ }).click();
-await waitText("#out-register", "human root", "step1: passport created");
+await waitText("#out-register", "Passaporto creato", "step1: passport created");
 
 // Step 2 — issue mandate (default scope: read:calendar + book:flights)
-await page.getByRole("button", { name: /Genera mandato/ }).click();
-await waitText("#out-issue", "Mandato emesso", "step2: mandate issued");
+await page.getByRole("button", { name: /Firma il mandato/ }).click();
+await waitText("#out-issue", "Mandato attivo", "step2: mandate issued");
 
 // Step 3a — in-scope action -> valid
-await act("book:flights", "AZIONE ESEGUITA", "step3a: in-scope action ACCEPTED");
+await act("book:flights", "Azione eseguita", "step3a: in-scope action ACCEPTED");
 await page.screenshot({ path: path.join(SHOTS, "act-valid.png") });
 
-// Step 3b — out-of-scope action -> denied (reason: scope)
-await act("post:linkedin", "scope", "step3b: out-of-scope action DENIED (scope)");
+// Step 3b — out-of-scope action -> denied (reason: out of permissions)
+await act("post:linkedin", "permessi", "step3b: out-of-scope action DENIED (scope)");
 await page.screenshot({ path: path.join(SHOTS, "act-scope-denied.png") });
 
 // Step 4 — revoke
 await page.getByRole("button", { name: /Revoca il mandato/ }).click();
-await waitText("#out-revoke", "REVOCATO", "step4: mandate revoked");
+await waitText("#out-revoke", "Mandato revocato", "step4: mandate revoked");
 
-// Step 5 — in-scope action AFTER revoke -> denied (reason: notRevoked), in real time
-await act("book:flights", "notRevoked", "step5: action after revoke DENIED (notRevoked)");
+// Step 5 — in-scope action AFTER revoke -> denied (reason: revoked), in real time
+await act("book:flights", "revocato", "step5: action after revoke DENIED (revoked)");
 await page.screenshot({ path: path.join(SHOTS, "act-revoked.png") });
 
 await browser.close();

@@ -246,7 +246,7 @@ async def agent_act(body: ActBody, request: Request):
     receipt = sign_receipt(
         content.encode("utf-8"), token, AGENT_KEY, scope=body.action, mandate_id=mandate_id
     )
-    payload["message"] = f"✓ Agent performed '{body.action}' on behalf of its human."
+    payload["message"] = f"L'agente ha eseguito «{body.action}» per conto della persona che l'ha autorizzato."
     payload["content"] = content
     payload["receipt"] = receipt
     return payload
@@ -256,19 +256,19 @@ def _draft_content(action: str, agent_name: str) -> str:
     """The agent's deliverable for an action (the bytes the receipt is signed over)."""
     drafts = {
         "post:linkedin": (
-            "Just shipped Agent Passport — verifiable, revocable mandates for AI agents. "
-            "Every action an agent takes can now carry a signed receipt proving a real human "
-            "authorized it, within scope, revocable in real time. The trust layer for the agent web."
+            "Abbiamo lanciato Agent Passport — mandati verificabili e revocabili per agenti AI. "
+            "Ogni azione di un agente può ora portare una ricevuta firmata che prova che una "
+            "persona reale l'ha autorizzata, entro i permessi e revocabile in tempo reale."
         ),
         "send:email": (
-            "Subject: Booking confirmed\n\nHi — your flight is booked. This message was produced "
-            "by an authorized agent acting under a verifiable human mandate."
+            "Oggetto: Prenotazione confermata\n\nCiao — il tuo volo è prenotato. Questo messaggio "
+            "è stato prodotto da un agente autorizzato con un mandato umano verificabile."
         ),
-        "book:flights": "Flight booking request: MXP→JFK, 2026-07-15, 1 passenger, economy.",
-        "read:calendar": "Calendar digest: 3 meetings today; next free slot 15:00–16:00.",
+        "book:flights": "Richiesta di prenotazione volo: Milano (MXP) → New York (JFK), 15 lug 2026, 1 passeggero, economy.",
+        "read:calendar": "Riepilogo agenda: 3 riunioni oggi; primo slot libero 15:00–16:00.",
     }
-    body = drafts.get(action, f"Output for action '{action}'.")
-    return f"{body}\n\n— produced by {agent_name}"
+    body = drafts.get(action, f"Output per l'azione «{action}».")
+    return f"{body}\n\n— prodotto da {agent_name}"
 
 
 @app.post("/verify-receipt")

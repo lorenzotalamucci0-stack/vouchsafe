@@ -36,31 +36,31 @@ async function act(action, verdict) {
   await page.evaluate(() => { document.getElementById("out-act").innerHTML = ""; });
   await page.locator("#action").selectOption(action);
   await pause(500);
-  await page.getByRole("button", { name: /esegue l'azione/ }).click();
+  await page.getByRole("button", { name: /Esegui l'azione/ }).click();
   await page.locator("#out-act .verdict").filter({ hasText: verdict }).first().waitFor({ timeout: 8000 });
 }
 
 await page.goto(BASE);
 await pause(1200);
 await page.getByRole("button", { name: /Crea passaporto/ }).click();
-await waitOut("#out-register", "human root");
+await waitOut("#out-register", "Passaporto creato");
 await pause(1500);
 
-await page.getByRole("button", { name: /Genera mandato/ }).click();
-await waitOut("#out-issue", "Mandato emesso");
+await page.getByRole("button", { name: /Firma il mandato/ }).click();
+await waitOut("#out-issue", "Mandato attivo");
 await pause(1800);
 
-await act("book:flights", "AZIONE ESEGUITA");      // valid
+await act("book:flights", "Azione eseguita");      // valid
 await pause(2600);
 
-await act("post:linkedin", "scope");               // out-of-scope -> denied
+await act("post:linkedin", "permessi");            // out-of-scope -> denied
 await pause(2400);
 
 await page.getByRole("button", { name: /Revoca il mandato/ }).click();
-await waitOut("#out-revoke", "REVOCATO");
+await waitOut("#out-revoke", "Mandato revocato");
 await pause(1800);
 
-await act("book:flights", "notRevoked");           // revoked -> denied in real time
+await act("book:flights", "revocato");             // revoked -> denied in real time
 await pause(2800);
 
 const videoPath = await page.video().path();
