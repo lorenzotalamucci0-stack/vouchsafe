@@ -121,6 +121,22 @@
     .wrap{padding:20px 14px 48px} header h1{font-size:25px} .what{font-size:16px}
     .step,.info{padding:15px 15px;border-radius:14px} .verdict{font-size:17px} .tokrow code{max-width:46%}
   }
+  /* developer docs */
+  .dev h3{font-size:15px;font-weight:700;margin:24px 0 8px;color:var(--txt);display:flex;align-items:center;gap:8px}
+  .dev h3 .ic{font-size:18px}
+  .dev p{font-size:14.5px;margin:8px 0}
+  .dev .code{margin:8px 0 0;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+    padding:13px 14px;overflow-x:auto;font:12.5px/1.7 var(--mono);color:var(--txt);white-space:pre}
+  .dev .code .c{color:var(--mut)}
+  .dev .tbl{overflow-x:auto;margin:8px 0 0}
+  .dev table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:440px}
+  .dev th,.dev td{text-align:left;padding:8px 9px;border-top:1px solid var(--line);vertical-align:top}
+  .dev th{color:var(--mut);font-weight:600}
+  .dev :not(pre)>code{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font:12.5px var(--mono)}
+  .dev .ckrow{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .dev .ckrow:first-child{border-top:0}
+  .dev .ckname{flex:none;min-width:140px;font:12.5px var(--mono);color:var(--acc)}
+  @media (max-width:560px){ .dev .ckrow{flex-direction:column;gap:2px} .dev .ckname{min-width:0} }
 </style>
 </head>
 <body>
@@ -294,35 +310,117 @@
 </section>
 
 <!-- PER SVILUPPATORI -->
-<section class="info" id="dev" style="margin-top:14px">
+<section class="info dev" id="dev" style="margin-top:14px">
   <h2>Per sviluppatori — mettilo nel tuo agente</h2>
-  <p class="story">Vouchsafe non è un'app in cui fai login: è un <b>wrapper</b> attorno a ciò
-  che il tuo agente già produce. L'agente firma il suo output, <b>chiunque</b> lo verifica — e se
-  revochi il mandato, quell'output smette di valere all'istante. Funziona con Claude Code, Codex,
-  un tool MCP o un semplice script.</p>
+  <p class="story">Vouchsafe non è un'app in cui fai login: è un <b>wrapper</b> attorno a ciò che il
+  tuo agente già produce. L'agente firma il suo output, <b>chiunque</b> lo verifica con la sola
+  chiave pubblica — e se l'umano revoca il mandato, quell'output smette di valere all'istante.
+  Funziona con Claude Code, Codex, un tool MCP o un semplice script. SDK in <b>Python</b> e
+  <b>JavaScript</b>, una <b>CLI</b>, zero infrastruttura.</p>
 
   <div class="flow" style="margin-top:14px">
     <div class="box"><div class="ic">🆔</div><b>1 · Identità</b><span>una chiave = l'agente</span></div>
     <div class="arr">→</div>
-    <div class="box"><div class="ic">📜</div><b>2 · Passaporto</b><span>l'umano firma una volta</span></div>
+    <div class="box"><div class="ic">📜</div><b>2 · Mandato</b><span>l'umano firma una volta</span></div>
     <div class="arr">→</div>
     <div class="box"><div class="ic">🖊️</div><b>3 · Firma output</b><span>sign_receipt(...)</span></div>
     <div class="arr">→</div>
     <div class="box"><div class="ic">🛡️</div><b>4 · Gate</b><span>verify → accetta/rifiuta</span></div>
   </div>
 
-  <label style="margin-top:14px">Lato agente + lato ricevente, 2 righe</label>
-  <pre style="margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
-    padding:13px 14px;overflow-x:auto;font:13px/1.7 var(--mono);color:var(--txt)"># shell — l'agente firma, chiunque fa da gate (exit 1 = rifiuto)
-vouchsafe sign report.md > report.md.receipt
-vouchsafe verify report.md report.md.receipt --issuer $AP_ISSUER || exit 1
+  <h3><span class="ic">🔧</span>Come funziona sotto il cofano</h3>
+  <p>Niente magia, solo primitivi standard messi in fila:</p>
+  <div class="tbl"><table>
+    <tr><th>Pezzo</th><th>Cos'è</th></tr>
+    <tr><td><b>Identità agente</b></td><td>una coppia di chiavi <b>Ed25519</b>. Il suo <code>did:key</code> <i>è</i> l'identità dell'agente — firma le ricevute.</td></tr>
+    <tr><td><b>Mandato</b></td><td>una <b>W3C Verifiable Credential</b> come <b>VC-JWT</b> (JOSE), firmata dall'issuer (Ed25519) e <b>contro-firmata dall'umano via WebAuthn</b> (la passkey firma l'hash canonico del mandato — JCS / RFC 8785).</td></tr>
+    <tr><td><b>Content Receipt</b></td><td>un VC-JWT firmato dall'agente che lega <code>SHA-256(byte&nbsp;output) + mandato + scope + tempo</code>. Un byte cambiato → la firma non torna.</td></tr>
+    <tr><td><b>Revoca</b></td><td>un endpoint di stato online. La verifica lo interroga: mandato revocato → la ricevuta non verifica più. <b>Fail-closed</b> (issuer irraggiungibile = rifiuto).</td></tr>
+  </table></div>
 
-# python — stesso flusso nel codice
-receipt = sign_receipt(output, AP_TOKEN, agent_key, scope="post:linkedin", mandate_id=mid)
-ok = verify_receipt(output, receipt, expected_issuer=ISSUER_DID).valid</pre>
-  <p class="note">Ricetta completa (hook <code>Stop</code> per Claude Code, esempio eseguibile,
-  pattern MCP/A2A) → <b>INTEGRATION.md</b> e <b>integrations/claude-code/</b> nel repo. Provalo
-  senza server: <code>uv run python examples/standalone.py</code>.</p>
+  <h3><span class="ic">📦</span>Installa</h3>
+  <pre class="code"><span class="c"># Python 3.11+ — SDK + CLI</span>
+cd packages/python && uv pip install -e .
+<span class="c"># prova l'intero giro senza server né passkey:</span>
+uv run python examples/standalone.py</pre>
+
+  <h3><span class="ic">①②③④</span>Le 4 mosse, in dettaglio</h3>
+  <p><b>1. Crea l'identità dell'agente</b> (una volta). Il <code>did:key</code> stampato è l'agente.</p>
+  <pre class="code">vouchsafe keygen --out agent.pem</pre>
+  <p><b>2. Un umano emette il mandato</b> per quel <code>did:key</code> (una volta), firmando con la
+  passkey nella demo web qui sopra. Poi passi all'agente token + chiave come segreti:</p>
+  <pre class="code">export AP_AGENT_KEY=agent.pem
+export AP_TOKEN=passport.jwt      <span class="c"># il token emesso — vale fino a scadenza o revoca</span></pre>
+  <p><b>3. L'agente firma ogni output</b> che produce.</p>
+  <pre class="code">vouchsafe sign report.md > report.md.receipt</pre>
+  <p><b>4. Chiunque fa da gate</b> — exit 0 = ok, exit 1 = rifiuto. Controllo revoca via HTTP.</p>
+  <pre class="code">vouchsafe verify report.md report.md.receipt --issuer "$AP_ISSUER" || exit 1</pre>
+
+  <h3><span class="ic">🐍</span>Nel codice (SDK Python)</h3>
+  <pre class="code">from vouchsafe import sign_receipt, verify_receipt
+
+<span class="c"># lato agente — token + chiave dall'emissione</span>
+receipt = sign_receipt(output_bytes, AP_TOKEN, agent_key,
+                       scope="post:linkedin", mandate_id=mid)
+
+<span class="c"># lato verificatore — basta la chiave pubblica dell'issuer</span>
+res = verify_receipt(output_bytes, receipt, expected_issuer=ISSUER_DID)
+if not res.valid:
+    reject(res.reason)   <span class="c"># "notRevoked" | "outputHash" | "scope" | ...</span></pre>
+  <p class="note">Stesso SDK in JavaScript (Node 20+ / browser): <code>verifyReceipt(...)</code>
+  verifica anche i token emessi dal Python (interop cross-SDK testato).</p>
+
+  <h3><span class="ic">🧩</span>Pattern di integrazione</h3>
+  <div class="tbl"><table>
+    <tr><th>Dove</th><th>Come</th></tr>
+    <tr><td><b>Claude Code / Codex</b></td><td>un hook <code>Stop</code> firma il deliverable del sub-agente; un gate a valle fa <code>vouchsafe verify</code>. Revochi → l'output del sub-agente viene rifiutato in automatico.</td></tr>
+    <tr><td><b>Agente → agente (A2A)</b></td><td>chi produce spedisce <code>{output, receipt}</code>; chi consuma chiama <code>verify_receipt</code> prima di fidarsi.</td></tr>
+    <tr><td><b>Tool MCP</b></td><td>avvolgi la response del tool con una ricevuta; il client la verifica prima di usarla.</td></tr>
+    <tr><td><b>Output verso umani</b></td><td>pubblichi la ricevuta accanto al contenuto; chiunque incolla i due in <code>/verify.html</code>.</td></tr>
+  </table></div>
+
+  <details class="decode" style="margin-top:14px">
+    <summary>Hook Claude Code — <code>.claude/settings.json</code></summary>
+    <div class="kv"><pre class="code" style="margin:10px 0 0">{
+  "hooks": {
+    "Stop": [
+      { "matcher": "*", "hooks": [
+        { "type": "command",
+          "command": "sh integrations/claude-code/sign_deliverable.sh" }
+      ] }
+    ]
+  }
+}</pre>
+    <p style="padding:0 2px">L'orchestratore mette in <code>AP_DELIVERABLE</code> il file prodotto
+    (path <b>fidato</b>, mai output grezzo del modello). Lo script firma; il lato che consuma fa il
+    gate. Ricetta + demo eseguibile in <code>integrations/claude-code/</code>.</p></div>
+  </details>
+
+  <details class="decode">
+    <summary>Cosa controlla <code>verify()</code> (in ordine)</summary>
+    <div class="kv" style="padding:10px 14px 14px">
+      <div class="ckrow"><span class="ckname">receiptSignature</span><span>la ricevuta è firmata dall'agente (Ed25519, <code>alg</code> pinnato).</span></div>
+      <div class="ckrow"><span class="ckname">outputHash</span><span>i byte del contenuto combaciano con l'hash firmato — niente modifiche.</span></div>
+      <div class="ckrow"><span class="ckname">agentBinding</span><span>l'agente della ricevuta è il soggetto del mandato (stesso <code>did:key</code>).</span></div>
+      <div class="ckrow"><span class="ckname">issuerSignature</span><span>il mandato è firmato dall'issuer atteso.</span></div>
+      <div class="ckrow"><span class="ckname">recognizedFormat</span><span>contesto/tipo della credenziale riconosciuti (rifiuta formati ignoti).</span></div>
+      <div class="ckrow"><span class="ckname">humanProof</span><span>la firma WebAuthn dell'umano è valida sull'hash del mandato.</span></div>
+      <div class="ckrow"><span class="ckname">notExpired</span><span>siamo dentro la finestra <code>validFrom…validUntil</code>.</span></div>
+      <div class="ckrow"><span class="ckname">notRevoked</span><span>il mandato non è stato revocato (controllo online, fail-closed).</span></div>
+      <div class="ckrow"><span class="ckname">scope</span><span>l'azione/contenuto rientra nei permessi del mandato.</span></div>
+    </div>
+  </details>
+
+  <h3><span class="ic">⚖️</span>Limiti onesti (dichiarali a chi integri)</h3>
+  <ul class="facts">
+    <li>La passkey firma un <b>hash opaco</b>, non lo scope leggibile: il consenso informato dipende dalla UI dell'issuer (<code>SPEC.md</code> §10).</li>
+    <li>La ricevuta prova <b>provenienza autorizzata</b>, non che il contenuto sia <i>vero</i>, e non sopravvive all'<b>analog hole</b> (rifotografi/riscrivi → byte diversi).</li>
+    <li>Revoca v1 = endpoint semplice, <b>fail-closed</b> senza grace; <code>did:key</code>/base58 hand-rolled (ok per reference impl, usa una lib audita in produzione).</li>
+  </ul>
+
+  <p class="note" style="margin-top:14px">Riferimento completo → <b>INTEGRATION.md</b> (i 4 pattern),
+  <b>SPEC.md</b> (formato mandato + Content Receipt §13 + threat model), e
+  <code>examples/standalone.py</code> per il giro end-to-end senza server.</p>
 </section>
 
 <p class="foot">Tutto gira in locale, gratis. Vuoi controllare una ricevuta da solo?
