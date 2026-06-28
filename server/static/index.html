@@ -7,14 +7,15 @@
 <style>
   :root{
     --bg:#0b0e14; --panel:#141925; --panel2:#0e1320; --line:#222a3a; --txt:#e6e9f0; --mut:#93a0b4;
-    --acc:#5b8cff; --ok:#34d399; --bad:#f87171; --okbg:rgba(52,211,153,.12); --badbg:rgba(248,113,113,.12);
+    --acc:#5b8cff; --ok:#34d399; --bad:#f87171; --warn:#fbbf24; --okbg:rgba(52,211,153,.12); --badbg:rgba(248,113,113,.12);
     --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:radial-gradient(1100px 480px at 50% -120px,#121a2e 0%,var(--bg) 70%);
     color:var(--txt);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden}
-  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 20px 64px}
+  .brand{display:inline-flex;align-items:baseline;gap:0;text-decoration:none;color:var(--txt)}
   header h1{margin:0;font-size:30px;letter-spacing:-.02em;font-weight:800}
   header h1 .tag{color:var(--acc)}
   .what{font-size:18px;margin:12px 0 2px}
@@ -27,7 +28,7 @@
   .chipcard b{color:var(--acc)} .chipcard span{color:var(--mut);font-size:13.5px}
   .toolbar{display:flex;justify-content:flex-end;margin:14px 0 0}
   main{display:grid;gap:14px;margin-top:8px}
-  .step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .step,.info{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
   .step h2{margin:0;font-size:17px;display:flex;align-items:center;gap:10px;font-weight:700}
   .num{flex:none;display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;
     background:linear-gradient(180deg,#243150,#1a2336);color:#fff;font:700 14px/1 system-ui}
@@ -46,14 +47,29 @@
     font:600 15px system-ui;padding:12px 18px;border-radius:11px;cursor:pointer;margin-top:16px;
     transition:filter .15s,opacity .15s}
   button:hover:not(:disabled){filter:brightness(1.08)}
-  button.ghost{background:transparent;border-color:var(--line);color:var(--txt);font-size:13.5px;
-    padding:8px 13px;margin-top:0}
-  button.danger{background:var(--bad)}
+  button.ghost{background:transparent;border-color:var(--line);color:var(--txt);font-size:13.5px;padding:8px 13px;margin-top:0}
+  button.danger{background:var(--bad)} button.mini{font-size:12px;padding:6px 10px;margin:0}
   button:disabled{opacity:.4;cursor:not-allowed}
+  /* "?" help toggles + inline tips */
+  .q{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel2);color:var(--mut);font:700 11px system-ui;cursor:pointer;margin-left:2px;flex:none}
+  .q:hover{color:var(--acc);border-color:var(--acc)}
+  .tip{margin:8px 0 0;padding:9px 12px;background:var(--panel2);border:1px dashed var(--line);
+    border-radius:9px;color:var(--mut);font-size:13px}
+  .tip[hidden]{display:none}
+  /* "Come funziona" */
+  .info h2{margin:0;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .story{margin:12px 0 0;font-size:14.5px}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:14px 0 2px}
+  .flow .box{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;
+    padding:11px 12px;text-align:center}
+  .flow .box .ic{font-size:22px} .flow .box b{display:block;font-size:13.5px;margin-top:3px}
+  .flow .box span{color:var(--mut);font-size:12px}
+  .flow .arr{display:grid;place-items:center;color:var(--mut);font-size:20px;flex:none;width:18px}
+  @media (max-width:560px){ .flow .arr{transform:rotate(90deg);width:auto;height:14px} .flow .box{min-width:44%} }
   /* output cards + verdicts */
   .out{margin-top:14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
-    padding:14px 15px;opacity:0;max-height:0;overflow:hidden;transition:opacity .25s ease;
-    font-size:14px}
+    padding:14px 15px;opacity:0;max-height:0;overflow:hidden;transition:opacity .2s ease;font-size:14px}
   .out.show{opacity:1;max-height:none;overflow:visible}
   .verdict{display:flex;align-items:center;gap:12px;font:800 19px/1.2 system-ui;margin:0}
   .verdict .ico{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:22px}
@@ -61,31 +77,47 @@
   .verdict.bad{color:var(--bad)} .verdict.bad .ico{background:var(--badbg)}
   .out.ok{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,var(--okbg),transparent)}
   .out.bad{border-color:rgba(248,113,113,.45);background:linear-gradient(180deg,var(--badbg),transparent)}
-  .saidline{margin:10px 0 0;color:var(--txt);font-size:14.5px}
-  .checks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
-  .checks li{display:flex;align-items:center;gap:9px;font-size:13.5px}
+  .saidline{margin:10px 0 0;font-size:14.5px}
+  .checks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:4px}
+  .checks{padding:0} .checks>li{list-style:none}
+  .checks .ck{display:flex;align-items:center;gap:9px;font-size:13.5px}
   .checks .mark{flex:none;width:20px;text-align:center;font-weight:700}
   .checks .y .mark{color:var(--ok)} .checks .n .mark{color:var(--bad)} .checks .skip{color:var(--mut)}
   .checks .skip .mark{color:var(--mut)}
+  .checks .why{margin:0 0 4px 29px;color:var(--mut);font-size:12.5px}
+  .checks .why[hidden]{display:none}
+  /* decoded panel */
+  .decode{margin-top:12px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);overflow:hidden}
+  .decode summary{cursor:pointer;padding:11px 14px;font-weight:600;font-size:13.5px;list-style:none}
+  .decode summary::-webkit-details-marker{display:none}
+  .decode summary::before{content:"▸ ";color:var(--acc)}
+  .decode[open] summary::before{content:"▾ "}
+  .kv{padding:4px 14px 14px} .kv div{display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .kv div:first-child{border-top:0} .kv .k{color:var(--mut);min-width:120px} .kv .v{word-break:break-word}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font:700 12px var(--mono)}
+  .badge.ok{background:var(--okbg);color:var(--ok)} .badge.bad{background:var(--badbg);color:var(--bad)}
+  .badge.warn{background:rgba(251,191,36,.14);color:var(--warn)}
   .tokrow{display:flex;align-items:center;gap:8px;margin-top:10px;font:12px var(--mono);color:var(--mut)}
   .tokrow code{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:3px 7px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
-  .copy{cursor:pointer;color:var(--acc);font:600 12px system-ui;border:1px solid var(--line);
-    border-radius:7px;padding:3px 9px;background:transparent}
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:58%}
+  .copy{cursor:pointer;color:var(--acc);font:600 12px system-ui;border:1px solid var(--line);border-radius:7px;padding:3px 9px;background:transparent}
   .note{color:var(--mut);font-size:13px;margin-top:6px}
   .foot{margin-top:22px;color:var(--mut);font-size:13px;text-align:center}
   a{color:var(--acc)}
+  /* session history */
+  #history div.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
+  #history div.hrow:first-child{border-top:0}
+  #history .hscope{flex:1;min-width:120px} #history .hid{font:12px var(--mono);color:var(--mut)}
   @media (max-width:560px){
-    .wrap{padding:24px 14px 48px} header h1{font-size:25px} .what{font-size:16px}
-    .step{padding:15px 15px;border-radius:14px} .verdict{font-size:17px}
-    .tokrow code{max-width:48%}
+    .wrap{padding:20px 14px 48px} header h1{font-size:25px} .what{font-size:16px}
+    .step,.info{padding:15px 15px;border-radius:14px} .verdict{font-size:17px} .tokrow code{max-width:46%}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1>Agent <span class="tag">Passport</span></h1>
+  <a class="brand" href="/"><h1>Agent <span class="tag">Passport</span></h1></a>
   <p class="what"><b>La patente d'identità per gli agenti AI.</b></p>
   <p class="why">Prova che dietro un bot c'è una <b>persona reale</b> che l'ha autorizzato a fare
   una cosa precisa, per un tempo preciso — e che puoi <b>spegnere quando vuoi</b>.</p>
@@ -97,18 +129,43 @@
   <div class="toolbar"><button class="ghost" id="btn-reset">↻ Ricomincia</button></div>
 </header>
 
+<!-- COME FUNZIONA -->
+<section class="info" id="info">
+  <h2>Come funziona <span style="font-weight:400;font-size:13px">(30 secondi)</span>
+    <button class="ghost mini" id="btn-info-toggle">nascondi</button></h2>
+  <div id="info-body">
+    <p class="story">Dai al tuo assistente AI il permesso di <b>prenotarti i voli</b>, per
+    <b>5 minuti</b>. Lui prenota. Poi cambi idea e <b>revochi</b>: da quel momento non può più —
+    e <b>chiunque</b> può controllare cosa ha fatto e con quale permesso. Niente password: firmi con
+    l'impronta del telefono.</p>
+    <div class="flow">
+      <div class="box"><div class="ic">🔑</div><b>Persona</b><span>firma il permesso</span></div>
+      <div class="arr">→</div>
+      <div class="box"><div class="ic">📜</div><b>Mandato</b><span>cosa · per quanto</span></div>
+      <div class="arr">→</div>
+      <div class="box"><div class="ic">🤖</div><b>Agente</b><span>agisce + scontrino</span></div>
+      <div class="arr">→</div>
+      <div class="box"><div class="ic">⛔</div><b>Revoca</b><span>spegni quando vuoi</span></div>
+    </div>
+  </div>
+</section>
+
 <main id="demo">
 
   <section class="step">
-    <h2><span class="num">1</span> Crea il tuo passaporto</h2>
-    <p class="desc">Usi l'impronta o il volto del tuo dispositivo (una <b>passkey</b>) come firma.
-    Niente password, niente dati che escono: la chiave resta nel telefono.</p>
+    <h2><span class="num">1</span> Crea il tuo passaporto <button class="q" data-tip="tip-1">?</button></h2>
+    <p class="tip" id="tip-1" hidden>Una <b>passkey</b> è la chiave del tuo dispositivo (impronta o volto).
+      Qui diventa la tua firma: prova che dietro c'è una persona vera, non un altro bot.</p>
+    <p class="desc">Usi l'impronta o il volto del tuo dispositivo come firma. Niente password, niente
+    dati che escono: la chiave resta nel telefono.</p>
     <button id="btn-register">🔑 Crea passaporto</button>
     <div id="out-register" class="out"></div>
   </section>
 
   <section class="step">
-    <h2><span class="num">2</span> Dai un incarico all'agente</h2>
+    <h2><span class="num">2</span> Dai un incarico all'agente <button class="q" data-tip="tip-2">?</button></h2>
+    <p class="tip" id="tip-2" hidden>Il <b>mandato</b> è il permesso firmato: dice <b>cosa</b> può fare
+      l'agente e <b>fino a quando</b>. Lo firmi tu con la passkey — nessun altro può crearlo al posto tuo.</p>
     <p class="desc">Scegli <b>cosa</b> può fare l'agente (i permessi) e <b>per quanto</b> tempo.
     Poi <b>firmi</b> l'incarico con la tua passkey: questo è il <b>mandato</b>.</p>
     <div class="row">
@@ -122,7 +179,9 @@
   </section>
 
   <section class="step">
-    <h2><span class="num">3</span> L'agente fa qualcosa</h2>
+    <h2><span class="num">3</span> L'agente fa qualcosa <button class="q" data-tip="tip-3">?</button></h2>
+    <p class="tip" id="tip-3" hidden>L'agente mostra il mandato. Viene accettato <b>solo se</b> è valido,
+      non scaduto, non revocato e l'azione è tra i permessi. Altrimenti: rifiutato.</p>
     <p class="desc">L'agente prova a eseguire un'azione mostrando il mandato. Viene accettato
     <b>solo se</b> il mandato è valido e quell'azione è tra i permessi.</p>
     <label>Azione che l'agente prova a fare</label>
@@ -132,7 +191,9 @@
   </section>
 
   <section class="step">
-    <h2><span class="num">4</span> Il risultato porta una ricevuta</h2>
+    <h2><span class="num">4</span> Il risultato porta una ricevuta <button class="q" data-tip="tip-4">?</button></h2>
+    <p class="tip" id="tip-4" hidden>La <b>ricevuta</b> è uno scontrino firmato sul risultato: prova chi
+      l'ha prodotto e con quale permesso. La può controllare <b>chiunque</b>, anche dopo.</p>
     <p class="desc">L'agente non produce solo un contenuto: gli allega una <b>ricevuta firmata</b>.
     Chiunque può controllarla e sapere chi l'ha prodotto e se era autorizzato — anche dopo.</p>
     <label>Contenuto prodotto dall'agente</label>
@@ -144,11 +205,19 @@
   </section>
 
   <section class="step">
-    <h2><span class="num">5</span> Cambia idea: revoca</h2>
+    <h2><span class="num">5</span> Cambia idea: revoca <button class="q" data-tip="tip-5">?</button></h2>
+    <p class="tip" id="tip-5" hidden>Revoca = <b>spegni il permesso adesso</b>. Da quel momento l'agente
+      e la sua ricevuta non valgono più — in tempo reale, senza dover ri-firmare nulla.</p>
     <p class="desc">Spegni il mandato con un clic. Torna allo step 4 e ri-controlla lo
     <b>stesso</b> contenuto: la ricevuta passa da valida a <b>revocata all'istante</b>.</p>
     <button id="btn-revoke" class="danger" disabled>⛔ Revoca il mandato</button>
     <div id="out-revoke" class="out"></div>
+  </section>
+
+  <section class="step" id="history-sec" hidden>
+    <h2><span class="num">≡</span> Mandati di questa sessione</h2>
+    <p class="desc">Ogni mandato che crei, con il suo stato dal vivo. Puoi revocarli singolarmente.</p>
+    <div id="history"></div>
   </section>
 
 </main>

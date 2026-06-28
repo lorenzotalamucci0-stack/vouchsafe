@@ -37,14 +37,23 @@
   .checks .y .mark{color:var(--ok)} .checks .n .mark{color:var(--bad)} .checks .skip{color:var(--mut)}
   .checks .skip .mark{color:var(--mut)}
   a{color:var(--acc)}
-  @media (max-width:520px){ .wrap{padding:24px 14px} h1{font-size:22px} .verdict{font-size:18px} }
+  .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--mut);
+    font-size:13.5px;border:1px solid var(--line);border-radius:9px;padding:7px 12px;margin-bottom:18px}
+  .back:hover{color:var(--acc);border-color:var(--acc)}
+  h1 a{text-decoration:none;color:inherit}
+  .q{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel2);color:var(--mut);font:700 11px system-ui;cursor:pointer;flex:none}
+  .q:hover{color:var(--acc);border-color:var(--acc)}
+  .why{margin:2px 0 0 29px;color:var(--mut);font-size:12.5px} .why[hidden]{display:none}
+  @media (max-width:520px){ .wrap{padding:20px 14px} h1{font-size:22px} .verdict{font-size:18px} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Agent <span class="tag">Passport</span> — verifica una ricevuta</h1>
+  <a class="back" href="/">← Torna alla demo</a>
+  <h1><a href="/">Agent <span class="tag">Passport</span></a> — verifica una ricevuta</h1>
   <p class="sub">Incolla un <b>contenuto</b> e la sua <b>ricevuta</b>: ti dico chi l'ha prodotto,
-  con il permesso di chi, e se è ancora valido. <a href="/">← torna alla demo</a></p>
+  con il permesso di chi, e se è ancora valido.</p>
 
   <label>Contenuto (incolla il testo esatto)</label>
   <textarea id="content" rows="5" spellcheck="false" placeholder="il contenuto prodotto dall'agente"></textarea>
