@@ -72,7 +72,7 @@ cd packages/python && uv run python ../../examples/standalone.py
 |--|--|--|
 | **Claude Code / Codex / any CLI agent** | `Stop`/`PostToolUse` hook runs `vouchsafe sign`; a downstream gate runs `vouchsafe verify` | [`integrations/claude-code/`](integrations/claude-code/) (+ runnable `demo_gate.py`) |
 | **Agent → agent (A2A)** | the producing agent ships `{output, receipt}`; the consumer calls `verify_receipt` before trusting it | `examples/standalone.py` |
-| **MCP tool** | wrap a tool's response with a receipt; the client verifies before using the result | pattern below (v2 helper planned) |
+| **MCP tool** | the tool returns `{content, receipt}`; the client verifies before using the result | [`integrations/mcp/`](integrations/mcp/) (FastMCP server + runnable `demo.py`) |
 | **Human-facing output** | publish the receipt next to the content; anyone pastes both into `/verify.html` | the web verifier in `server/` |
 
 ### Why a consumer would bother

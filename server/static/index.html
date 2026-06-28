@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Vouchsafe — demo</title>
+<title>Vouchsafe — lo scontrino revocabile per i contenuti AI</title>
+<meta name="description" content="Un umano autorizza un agente AI con la passkey; ogni output porta una prova firmata; se revochi, la prova smette di valere all'istante. Open source, Apache-2.0." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Vouchsafe — lo scontrino revocabile per i contenuti AI" />
+<meta property="og:description" content="Autorizza un agente con la passkey, ogni output porta uno scontrino firmato, revoca e muore all'istante. Il layer di accountability che C2PA/Art.50 non hanno." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b8cff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 4v5c0 4-3 7-7 8-4-1-7-4-7-8V7z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E" />
 <style>
   :root{
     --bg:#0b0e14; --panel:#141925; --panel2:#0e1320; --line:#222a3a; --txt:#e6e9f0; --mut:#93a0b4;
@@ -111,7 +117,11 @@
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:58%}
   .copy{cursor:pointer;color:var(--acc);font:600 12px system-ui;border:1px solid var(--line);border-radius:7px;padding:3px 9px;background:transparent}
   .note{color:var(--mut);font-size:13px;margin-top:6px}
+  .hbadge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut);
+    background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  .hbadge i{font-style:normal;font-size:13px}
   .foot{margin-top:22px;color:var(--mut);font-size:13px;text-align:center}
+  .foot a{color:var(--acc)} .foot .sep{opacity:.5;margin:0 8px}
   a{color:var(--acc)}
   /* session history */
   #history div.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
@@ -146,6 +156,12 @@
   <p class="what"><b>Lo scontrino revocabile per i contenuti AI.</b></p>
   <p class="why">Un umano autorizza un agente con la <b>passkey</b>; ogni output porta una <b>prova
   firmata</b>; e se revochi, la prova <b>smette di valere all'istante</b>.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">
+    <span class="hbadge"><i>🔓</i> Open source · Apache-2.0</span>
+    <span class="hbadge"><i>🧩</i> SDK Python + JS</span>
+    <span class="hbadge"><i>🪶</i> Zero infrastruttura</span>
+    <span class="hbadge"><i>🔑</i> WebAuthn · Ed25519</span>
+  </div>
 
   <div class="lead">
     <a class="chipcard" href="#demo"><b>▶ Prova la demo</b><br><span>5 passi, ~30 secondi</span></a>
@@ -424,7 +440,8 @@ if not res.valid:
 </section>
 
 <p class="foot">Tutto gira in locale, gratis. Vuoi controllare una ricevuta da solo?
-→ <a href="/verify.html">apri il verificatore</a></p>
+→ <a href="/verify.html">apri il verificatore</a>
+<br><span style="opacity:.8">Vouchsafe<span class="sep">·</span>open source, Apache-2.0<span class="sep">·</span>SDK Python + JS<span class="sep">·</span>zero infrastruttura</span></p>
 </div>
 <script src="/app.js"></script>
 </body>

@@ -76,8 +76,8 @@ dall'agente, controllabile da chiunque, revocabile in qualsiasi momento.
   differenza di World/Worldcoin). Lo costruisci in **settimane**, non anni.
 - Il valore è la **reference implementation neutrale + l'SDK + la root umana/scontrino sopra
   standard emergenti**, non una rete biometrica né un nuovo standard da zero.
-- Si aggancia a tutto ciò su cui Pampa già lavora (agenti, Leev): un agente di Leev potrebbe
-  **portare un mandato firmato** quando agisce per un cliente.
+- Si aggancia a qualsiasi orchestratore di agenti: un agente può **portare un mandato firmato**
+  quando agisce per conto di un cliente, e il consumatore lo verifica.
 
 ## 5. Prototipo minimo (MVP, settimane)
 

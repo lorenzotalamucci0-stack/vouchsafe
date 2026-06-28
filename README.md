@@ -1,5 +1,11 @@
 # Vouchsafe
 
+![license](https://img.shields.io/badge/license-Apache--2.0-blue)
+![python](https://img.shields.io/badge/python-3.11%2B-3776ab)
+![node](https://img.shields.io/badge/node-20%2B-339933)
+![tests](https://img.shields.io/badge/tests-39%20py%20%C2%B7%2014%20js-brightgreen)
+![status](https://img.shields.io/badge/status-prototype-orange)
+
 **Lo scontrino revocabile per i contenuti AI.** Un umano autorizza un agente con la sua passkey;
 ogni output dell'agente porta una **prova firmata**; e se l'umano **revoca**, quella prova
 **smette di valere all'istante**.

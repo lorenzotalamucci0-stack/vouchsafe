@@ -1,37 +1,42 @@
-# CLAUDE.md — Vouchsafe (Know-Your-Agent)
+# CLAUDE.md — Vouchsafe
 
-> Progetto di Pampa. Nato dalla sessione di brainstorming del 28 giu 2026 (deep-research su
-> proof-of-personhood → la crepa vera non è "provare un umano" ma **provare il mandato umano di
-> un agente AI**). Frontiera, non SaaS pulito: scommessa su uno standard + visibilità (LinkedIn).
+Guidance for Claude Code (and contributors) working in this repository.
 
-## Cos'è (in una riga)
-Un **passaporto/patente verificabile e revocabile per agenti AI**: prova che un agente sta
-agendo per conto di un **umano reale autorizzato**, con uno **scope** preciso e una **scadenza**,
-e che il permesso è **ancora valido** (revocabile in qualsiasi momento).
+## What this is
 
-## Cosa NON è (per non sbagliare direzione)
-- NON è "provare che sei umano" (proof-of-personhood) → muro irrisolvibile (un umano può
-  affittarsi a un bot) o già vinto da World su scala. Lo **eredito**, non lo reinvento.
-- NON è una nuova biometria, NON è un token/blockchain, NON è un nuovo root-of-trust.
-- È un **layer sottile** sopra login esistenti (passkey/WebAuthn, o World ID, o VC di terzi).
+**Vouchsafe** — a verifiable, revocable receipt for AI content. A human authorizes an agent by
+signing a mandate with their passkey (WebAuthn); every output the agent produces carries a signed
+**Content Receipt**; revoking the mandate invalidates the receipt in real time. The differentiator
+vs adjacent work (Signet, Microsoft APS, AP2, C2PA): revocation that kills the receipt **on
+content**, live. See `README.md` for positioning and `CONCEPT.md` for the full design.
 
-## Perché ora
-- Internet >50% bot (2025); traffico agentico +450%.
-- a16z: "il collo di bottiglia dell'economia degli agenti ora è l'**identità**, non l'intelligenza".
-- Paper OpenAI/MIT (arXiv 2408.07892) segna come **assente**: "norme e standard per agenti AI".
-- MCP/A2A fanno proliferare gli agenti → serviranno credenziali/mandati verificabili.
+## Layout
 
-## Stato
-- 28 giu 2026: scaffold + concept. **Nessun codice ancora.** Prossimo passo = prototipo minimo.
-- Vedi `CONCEPT.md` (idea completa + architettura + rischi) e `docs/RESEARCH.md` (fonti).
-- `docs/LINKEDIN.md` = bozza post per visibilità (Pampa condivide domani).
+- `packages/python/vouchsafe/` — the Python SDK (issue, verify, sign_receipt, verify_receipt,
+  delegation chain, status/revocation, WebAuthn proof) + the `vouchsafe` CLI.
+- `packages/js/` — a JavaScript SDK that cross-verifies tokens minted by Python.
+- `server/` — a FastAPI demo: passkey registration, mandate issuance, live revoke, the consumer
+  verifier at `/verify.html`, and the in-page developer docs.
+- `e2e/` — Playwright end-to-end tests driving a WebAuthn virtual authenticator.
+- `integrations/` — recipes (Claude Code hook, MCP) + runnable demos.
+- `examples/` — `standalone.py`: the whole loop in ~40 lines, no server.
+- `SPEC.md` — the wire format (mandate, Content Receipt §13, threat model).
+- `INTEGRATION.md` — how to put it into a real agent.
 
-## Regole di lavoro (VibeOS Pampa)
-- Italiano sempre. Onestà brutale (è una scommessa, non una rendita: dirlo).
-- Plan Mode prima di Build. Tag rollback prima di operazioni distruttive.
-- Costi: tutto locale finché non serve infra; allora stack più economico (skill infra-cost-advisor).
-- Push remote: SEMPRE chiedere prima.
-- Sicurezza: passkey/chiavi/credenziali mai hardcoded; identità dalla sessione/firma, mai dal body.
+## Working in this repo
 
-## Naming
-Working name: **Vouchsafe**. Alt: "KYA — Know Your Agent", "Patente Agente", "Agent Mandate".
+- **Verify with real execution**, never assume. Gates: `cd packages/python && pytest`;
+  `cd packages/js && node --test`; `cd e2e && node run.mjs|receipt.mjs|chain.mjs|uicheck.mjs`
+  (E2E and uicheck need the demo server running — `cd server && python run.py`).
+- **Security**: keys/credentials never hardcoded; the issuer key lives in `server/.keys/`
+  (gitignored). Identity for writes comes from the signature/session, never from a request body.
+- The credential context URL is `https://vouchsafe.dev/v1`; verifiers MUST reject unknown
+  context/type (SPEC §12) — enforced in `verify()` and in the delegation chain.
+- `devkit.py` mints mandates without a real human — **dev/tests/examples only** (it hard-refuses
+  to import under `AP_ENV=production`).
+
+## Honest limits (keep them stated, don't oversell)
+
+The passkey signs an opaque hash (not the readable scope); a receipt proves authorized provenance,
+not truth, and does not survive the analog hole; revocation v1 is a simple fail-closed endpoint;
+Art.50 is complemented, not satisfied, by this. All documented in `SPEC.md` §10–11 and `README.md`.
