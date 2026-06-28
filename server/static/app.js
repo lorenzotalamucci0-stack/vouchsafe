@@ -72,7 +72,9 @@ document.addEventListener("click", async (e) => {
   if (cp) { try { await navigator.clipboard.writeText(cp.dataset.copy); cp.textContent = "copiato ✓"; }
     catch { cp.textContent = "—"; } setTimeout(() => (cp.textContent = "copia"), 1400); return; }
   const rv = e.target.closest("[data-revoke]");
-  if (rv) { await doRevoke(rv.dataset.revoke); }
+  if (rv) { await doRevoke(rv.dataset.revoke); return; }
+  const rc = e.target.closest("[data-recheck]");
+  if (rc) { await recheckChain(); }
 });
 
 // ---- "Come funziona" collapse (persisted) ----
@@ -197,7 +199,7 @@ $("btn-register").addEventListener("click", async () => {
     state.humanId = data.humanId;
     show("out-register", verdictHead(true, "Passaporto creato") +
       `<p class="saidline">Sei tu la radice di fiducia. Ora puoi dare un incarico a un agente.</p>`, "ok");
-    $("btn-issue").disabled = false;
+    $("btn-issue").disabled = false; $("lock-issue").hidden = true;
   } catch (e) { show("out-register", verdictHead(false, "Non riuscito") + `<p class="saidline">${esc(e.message || e)}</p>`, "bad"); }
 });
 
@@ -228,7 +230,8 @@ $("btn-issue").addEventListener("click", async () => {
       `<p class="saidline">L'agente può: <b>${esc(scopeText(scope))}</b>.</p>` +
       decodeMandatePanel(data.token, ch.mandateId) +
       tokenRow("mandato (stringa firmata):", data.token), "ok");
-    $("btn-act").disabled = false; $("btn-revoke").disabled = false;
+    $("btn-act").disabled = false; $("btn-revoke").disabled = false; $("btn-delegate").disabled = false;
+    for (const id of ["lock-act", "lock-revoke", "lock-delegate"]) $(id).hidden = true;
     state.history.push({ mandateId: ch.mandateId, shortId: ch.mandateId.split(":").pop().slice(0, 8), scope, validUntil: ch.validUntil });
     renderHistory();
   } catch (e) { show("out-issue", verdictHead(false, "Non riuscito") + `<p class="saidline">${esc(e.message || e)}</p>`, "bad"); }
@@ -249,7 +252,7 @@ $("btn-act").addEventListener("click", async () => {
       checksList(data.checks || {}, MANDATE_ORDER), ok ? "ok" : "bad");
     if (ok && data.receipt) {
       $("rc-content").value = data.content; $("rc-receipt").value = data.receipt;
-      $("btn-verify-content").disabled = false;
+      $("btn-verify-content").disabled = false; $("lock-verify").hidden = true;
       show("out-verify", verdictHead(true, "Ricevuta pronta") +
         `<p class="saidline">Premi "Verifica il contenuto" per controllarla.</p>`, "ok");
     }
@@ -271,6 +274,35 @@ $("btn-verify-content").addEventListener("click", async () => {
 
 // ---- Step 5: revoke ----
 $("btn-revoke").addEventListener("click", () => doRevoke(state.mandateId));
+
+// ---- Advanced: delegation chain ----
+function renderChain(data) {
+  const links = (data.links || []).map((l) =>
+    `<li><div class="ck ${data.valid ? "y" : "n"}"><span class="mark">${l.kind === "root" ? "👤" : "🔗"}</span>` +
+    `<span><b>${esc(l.agentName || (l.agent || "").slice(0, 22))}</b> — può: ${esc(scopeText(l.scope))} ` +
+    `<span class="note">(${l.kind === "root" ? "radice umana" : "delegato"})</span></span></div></li>`).join("");
+  show("out-delegate",
+    verdictHead(data.valid, data.valid ? "Catena valida" : "Catena non valida", null) +
+    `<p class="saidline">${esc(data.summary)}</p><ul class="checks">${links}</ul>` +
+    `<button class="mini" data-recheck="1" style="margin-top:10px">↻ Ri-verifica la catena</button>`,
+    data.valid ? "ok" : "bad");
+}
+async function recheckChain() {
+  if (!state.childToken) return;
+  const { data } = await postJSON("/verify-chain", { token: state.childToken, action: "book:flights" });
+  renderChain(data);
+}
+$("btn-delegate").addEventListener("click", async () => {
+  try {
+    const { data: d } = await postJSON("/delegate", { parentToken: state.token, scope: ["book:flights"], ttlSeconds: 120 });
+    if (d.error) return show("out-delegate", verdictHead(false, "Non riuscito") + `<p class="saidline">${esc(d.error)}</p>`, "bad");
+    state.childToken = d.childToken;
+    const vc = jwtPayload(d.childToken)?.vc;
+    state.history.push({ mandateId: d.childId, shortId: d.childId.split(":").pop().slice(0, 8) + " · sub", scope: ["book:flights"], validUntil: vc.validUntil });
+    renderHistory();
+    await recheckChain();
+  } catch (e) { show("out-delegate", verdictHead(false, "Errore") + `<p class="saidline">${esc(e.message || e)}</p>`, "bad"); }
+});
 
 // ---- Reset ----
 $("btn-reset").addEventListener("click", () => location.reload());

@@ -18,6 +18,7 @@ from .keys import (
     issuer_key_to_pem,
     load_issuer_key,
 )
+from .delegate import ChainResult, sign_child_mandate, verify_chain
 from .mandate import build_inner_mandate
 from .present import extract_token, present
 from .receipt import (
@@ -46,6 +47,9 @@ __all__ = [
     "revoke",
     "sign_receipt",
     "verify_receipt",
+    "sign_child_mandate",
+    "verify_chain",
+    "ChainResult",
     "output_hash",
     "ReceiptVerificationResult",
     "VerificationResult",

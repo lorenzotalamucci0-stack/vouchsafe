@@ -149,6 +149,8 @@ export async function verify(token, opts = {}) {
 
 // Content Receipt (Pilastro 2).
 export { signReceipt, verifyReceipt } from "./receipt.js";
+// Delegation chain (Pilastro 1.5).
+export { verifyChain, signChildMandate } from "./delegate.js";
 
 // Revoke via the issuer's /revoke endpoint.
 export async function revoke(mandateId, { baseUrl }) {

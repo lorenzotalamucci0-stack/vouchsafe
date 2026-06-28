@@ -30,9 +30,11 @@ from agent_passport import (
     issuer_key_to_pem,
     load_issuer_key,
     revoke,
+    sign_child_mandate,
     sign_receipt,
     store_status_resolver,
     verify,
+    verify_chain,
     verify_receipt,
 )
 
@@ -113,6 +115,17 @@ class VerifyReceiptBody(BaseModel):
     # Bounded to keep the public verify endpoint from hashing/parsing unbounded input (DoS).
     content: str = Field(max_length=65536)
     receipt: str = Field(max_length=16384)
+
+
+class DelegateBody(BaseModel):
+    parentToken: str = Field(max_length=32768)
+    scope: list[str]
+    ttlSeconds: int = 120
+
+
+class VerifyChainBody(BaseModel):
+    token: str = Field(max_length=65536)
+    action: str | None = Field(default=None, max_length=128)
 
 
 # ---------- routes ----------
@@ -318,6 +331,60 @@ def _receipt_summary(result, subject: dict, human_id: str | None) -> str:
         "trustedIssuer": "il mandato non proviene dall'issuer atteso.",
     }
     return f"NON VALIDO — {reasons.get(result.reason, result.reason)}"
+
+
+@app.post("/delegate")
+def delegate(body: DelegateBody):
+    """The agent re-delegates a NARROWER mandate to a fresh sub-agent."""
+    unknown = [s for s in body.scope if s not in ALLOWED_SCOPES]
+    if not body.scope or unknown:
+        return JSONResponse({"error": f"unsupported scope(s): {unknown or 'empty'}"}, status_code=400)
+    sub_agent_id = issuer_did(generate_issuer_key())  # the sub-agent's identity
+    try:
+        child = sign_child_mandate(
+            body.parentToken, child_agent_id=sub_agent_id, scope=body.scope,
+            ttl_seconds=body.ttlSeconds, parent_agent_key=AGENT_KEY, status_base_url=BASE_URL,
+        )
+    except Exception as exc:
+        return JSONResponse({"error": f"could not delegate: {exc}"}, status_code=400)
+    import jwt as _jwt
+
+    child_id = _jwt.decode(child, options={"verify_signature": False})["vc"]["id"]
+    STORE.register(child_id)
+    return {"childToken": child, "childAgentId": sub_agent_id, "childId": child_id}
+
+
+@app.post("/verify-chain")
+def verify_chain_endpoint(body: VerifyChainBody):
+    """Verify a (possibly delegated) mandate chain; return a readable verdict + chain."""
+    result = verify_chain(
+        body.token, required_scope=body.action, expected_issuer=ISSUER_DID, status_resolver=RESOLVER,
+    )
+    return {
+        "valid": result.valid, "reason": result.reason, "depth": result.depth,
+        "links": result.links, "summary": _chain_summary(result),
+    }
+
+
+def _chain_summary(result) -> str:
+    n = len(result.links)
+    if result.valid:
+        leaf = result.links[0]
+        return (f"Catena valida ({n} anelli). L'azione è autorizzata fino all'umano: "
+                f"il sotto-agente può «{', '.join(leaf.get('scope', []))}», dentro i limiti del padre.")
+    reasons = {
+        "childSignature": "la firma di un anello della catena non è valida.",
+        "childBinding": "un anello non è stato firmato dall'agente giusto.",
+        "scopeNarrowing": "un figlio chiede più permessi del padre (deve restringere, non allargare).",
+        "expiryNarrowing": "un figlio dura più del padre (deve scadere prima o insieme).",
+        "notExpired": "un mandato della catena è scaduto.",
+        "notRevoked": "un mandato della catena è stato REVOCATO — cade tutta la catena.",
+        "scope": "l'azione è fuori dai permessi del sotto-agente.",
+        "issuerSignature": "la firma dell'issuer alla radice non è valida.",
+        "humanProof": "manca la firma umana alla radice.",
+        "depthExceeded": "catena troppo lunga.",
+    }
+    return f"Catena NON valida — {reasons.get(result.reason, result.reason)}"
 
 
 app.mount("/", StaticFiles(directory=STATIC), name="static")

@@ -51,9 +51,13 @@
   button.danger{background:var(--bad)} button.mini{font-size:12px;padding:6px 10px;margin:0}
   button:disabled{opacity:.4;cursor:not-allowed}
   /* "?" help toggles + inline tips */
-  .q{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);
-    background:var(--panel2);color:var(--mut);font:700 11px system-ui;cursor:pointer;margin-left:2px;flex:none}
+  .q{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel2);color:var(--mut);font:700 11px/1 system-ui;cursor:pointer;flex:none;margin:0;padding:0;vertical-align:middle}
   .q:hover{color:var(--acc);border-color:var(--acc)}
+  .step h2 .q{margin-left:auto}            /* push the "?" to the row end so titles align */
+  :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
+  .lock{margin:8px 0 0;color:var(--mut);font-size:13px;display:flex;align-items:center;gap:6px}
+  .lock[hidden]{display:none}
   .tip{margin:8px 0 0;padding:9px 12px;background:var(--panel2);border:1px dashed var(--line);
     border-radius:9px;color:var(--mut);font-size:13px}
   .tip[hidden]{display:none}
@@ -67,6 +71,11 @@
   .flow .box span{color:var(--mut);font-size:12px}
   .flow .arr{display:grid;place-items:center;color:var(--mut);font-size:20px;flex:none;width:18px}
   @media (max-width:560px){ .flow .arr{transform:rotate(90deg);width:auto;height:14px} .flow .box{min-width:44%} }
+  .usecards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .uc{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .uc .ic{font-size:22px} .uc b{display:block;margin:4px 0 4px} .uc p{margin:0;color:var(--mut);font-size:13px}
+  .facts{margin:10px 0 0;padding-left:20px;display:grid;gap:7px} .facts li{font-size:14px}
+  @media (max-width:560px){ .usecards{grid-template-columns:1fr} }
   /* output cards + verdicts */
   .out{margin-top:14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
     padding:14px 15px;opacity:0;max-height:0;overflow:hidden;transition:opacity .2s ease;font-size:14px}
@@ -175,6 +184,7 @@
     <label>Permessi (cosa può fare)</label>
     <div class="scopes" id="scopes"></div>
     <button id="btn-issue" disabled>✍️ Firma il mandato</button>
+    <p class="lock" id="lock-issue">🔒 Prima crea il passaporto (step 1).</p>
     <div id="out-issue" class="out"></div>
   </section>
 
@@ -187,6 +197,7 @@
     <label>Azione che l'agente prova a fare</label>
     <select id="action"></select>
     <button id="btn-act" disabled>▶ Esegui l'azione</button>
+    <p class="lock" id="lock-act">🔒 Prima firma un mandato (step 2).</p>
     <div id="out-act" class="out"></div>
   </section>
 
@@ -201,6 +212,7 @@
     <label>Ricevuta allegata <span class="note">(la prova firmata)</span></label>
     <textarea id="rc-receipt" rows="2" spellcheck="false" placeholder="comparirà dopo lo step 3"></textarea>
     <button id="btn-verify-content" disabled>🔎 Verifica il contenuto</button>
+    <p class="lock" id="lock-verify">🔒 Prima fai agire l'agente (step 3).</p>
     <div id="out-verify" class="out"></div>
   </section>
 
@@ -211,7 +223,20 @@
     <p class="desc">Spegni il mandato con un clic. Torna allo step 4 e ri-controlla lo
     <b>stesso</b> contenuto: la ricevuta passa da valida a <b>revocata all'istante</b>.</p>
     <button id="btn-revoke" class="danger" disabled>⛔ Revoca il mandato</button>
+    <p class="lock" id="lock-revoke">🔒 Prima firma un mandato (step 2).</p>
     <div id="out-revoke" class="out"></div>
+  </section>
+
+  <section class="step" id="adv-sec">
+    <h2><span class="num">★</span> Avanzato: catena di delega
+      <button class="q" data-tip="tip-adv">?</button></h2>
+    <p class="tip" id="tip-adv" hidden>Un agente con mandato può passarne uno <b>più stretto</b> a un
+      sotto-agente (meno permessi, meno tempo). Se revochi il mandato padre, <b>cade anche il figlio</b>.</p>
+    <p class="desc">L'agente delega a un <b>sotto-agente</b> un permesso ristretto (solo
+    <b>prenotare voli</b>, metà tempo). Il verificatore controlla tutta la catena fino all'umano.</p>
+    <button id="btn-delegate" disabled>🔗 Delega a un sotto-agente</button>
+    <p class="lock" id="lock-delegate">🔒 Prima firma un mandato (step 2).</p>
+    <div id="out-delegate" class="out"></div>
   </section>
 
   <section class="step" id="history-sec" hidden>
@@ -221,6 +246,49 @@
   </section>
 
 </main>
+
+<!-- COSA PUOI FARCI -->
+<section class="info" style="margin-top:18px">
+  <h2>Cosa puoi farci</h2>
+  <div class="usecards">
+    <div class="uc"><div class="ic">✈️</div><b>AI che ti prenota i voli</b>
+      <p>Le dai il permesso <i>solo</i> "prenotare voli", per 1 ora. Non può toccare le email.
+      Finita la trasferta, revochi: non prenoterà mai più a tuo nome.</p></div>
+    <div class="uc"><div class="ic">📣</div><b>AI che posta per te</b>
+      <p>Permesso "pubblicare su LinkedIn" per oggi. Ogni post esce con uno scontrino: chiunque
+      vede che era autorizzato da te. Cambi idea? Revochi e i prossimi post vengono rifiutati.</p></div>
+    <div class="uc"><div class="ic">💳</div><b>AI che paga per te</b>
+      <p>Permesso stretto e a tempo per un singolo acquisto. Scaduto il mandato, l'agente non può
+      più pagare — e ogni pagamento porta la prova di chi l'ha autorizzato.</p></div>
+    <div class="uc"><div class="ic">🧾</div><b>Contenuto AI con scontrino</b>
+      <p>Ogni testo/immagine prodotto porta una ricevuta verificabile: chi l'ha fatto, con quale
+      mandato umano, quando. Utile per le nuove regole sui contenuti AI.</p></div>
+  </div>
+  <p class="note">Il filo comune: <b>permesso limitato + scadenza + revoca + scontrino verificabile</b>.</p>
+</section>
+
+<!-- PERCHÉ ESISTE -->
+<section class="info" style="margin-top:14px">
+  <h2>Perché esiste</h2>
+  <p class="story">Internet si sta riempiendo di agenti AI che agiscono al posto nostro. Il problema
+  non è "sei umano?" (gara persa: l'AI batte i CAPTCHA), ma <b>"chi ha autorizzato questa azione, e
+  vale ancora?"</b>. I numeri:</p>
+  <ul class="facts">
+    <li><b>Oltre il 50%</b> del traffico web è ormai bot (2025) — il "Dead Internet".
+      <a href="https://www.nbcnews.com/tech/tech-news/bot-web-traffic-overtaken-human-web-traffic-data-shows-rcna348522" target="_blank" rel="noopener">fonte</a></li>
+    <li>Traffico degli agenti AI <b>+450%</b> in un anno.
+      <a href="https://www.axios.com/2026/04/17/worldcoin-zoom-shopify-retail-partnership" target="_blank" rel="noopener">contesto</a></li>
+    <li><b>a16z</b>: "il collo di bottiglia dell'economia degli agenti è l'<b>identità</b>, non l'intelligenza".
+      <a href="https://a16zcrypto.com/posts/article/ai-needs-crypto-now/" target="_blank" rel="noopener">fonte</a></li>
+    <li><b>EU AI Act, Art. 50</b> (ago 2026): i contenuti AI vanno dichiarati in modo
+      <b>machine-readable</b>. <a href="https://artificialintelligenceact.eu/article/50/" target="_blank" rel="noopener">testo</a></li>
+    <li>Paper <b>OpenAI / MIT</b> "Personhood Credentials": mancano norme e standard per gli agenti AI.
+      <a href="https://arxiv.org/abs/2408.07892" target="_blank" rel="noopener">arXiv 2408.07892</a></li>
+  </ul>
+  <p class="story"><b>Agent Passport risponde a questo:</b> un <b>mandato umano</b> verificabile +
+  <b>revoca</b> in tempo reale + uno <b>scontrino</b> firmato sull'output. Non reinventa l'identità:
+  aggiunge la parte che manca — <b>responsabilità e controllo</b>.</p>
+</section>
 
 <p class="foot">Tutto gira in locale, gratis. Vuoi controllare una ricevuta da solo?
 → <a href="/verify.html">apri il verificatore</a></p>
