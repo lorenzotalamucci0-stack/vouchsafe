@@ -444,5 +444,28 @@ if not res.valid:
 <br><span style="opacity:.8"><a href="https://github.com/lorenzotalamucci0-stack/vouchsafe" target="_blank" rel="noopener">GitHub</a><span class="sep">·</span>open source, Apache-2.0<span class="sep">·</span>SDK Python + JS<span class="sep">·</span>zero infrastruttura</span></p>
 </div>
 <script src="/app.js"></script>
+<script>
+// On shared free hosting (*.railway.app is a public suffix), browsers block WebAuthn rpId →
+// the interactive passkey flow can't run. Degrade gracefully: explain + disable those steps.
+(function () {
+  if (!/\.railway\.app$/i.test(location.hostname)) return;
+  var b = document.createElement("div");
+  b.className = "info";
+  b.style.cssText = "margin:0 0 14px;border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.10)";
+  b.innerHTML =
+    '<h2 style="color:var(--warn)">⚠️ Demo interattiva sul dominio ufficiale</h2>' +
+    '<p class="story">Questo è un host gratuito condiviso: i browser <b>bloccano la passkey</b> su questi domini, ' +
+    "quindi qui la creazione del passaporto è disattivata. Funziona tutto il resto — esplora come funziona, " +
+    'le <a href="#dev">dev docs</a> complete, prova il <a href="/verify.html">verificatore</a>, o vedi il codice su ' +
+    '<a href="https://github.com/lorenzotalamucci0-stack/vouchsafe" target="_blank" rel="noopener">GitHub</a>. ' +
+    "Il flusso completo (firma → revoca → reject) è nel video della demo.</p>";
+  var main = document.getElementById("demo");
+  main.parentNode.insertBefore(b, main);
+  ["btn-register", "btn-issue", "btn-act", "btn-revoke", "btn-delegate", "btn-verify-content"].forEach(function (id) {
+    var e = document.getElementById(id);
+    if (e) { e.disabled = true; e.style.opacity = ".45"; e.title = "Disattivato su questo dominio (vedi avviso in alto)"; }
+  });
+})();
+</script>
 </body>
 </html>
