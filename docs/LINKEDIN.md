@@ -3,10 +3,15 @@
 > Onestà: pubblicalo come "problema che sto esplorando / prototipo", NON come "ho risolto il futuro".
 > Credibilità > hype. Il media principale è la demo della **ricevuta che muore alla revoca**.
 >
-> **Media pronti** (in `docs/media/`):
-> - `demo-receipt.gif` — il cuore: contenuto + ricevuta VALIDA → revochi → **REVOCATA all'istante**. Media principale.
-> - `demo.gif` — il mandato: azione valida → revoca → rifiuto live. Secondario / carosello.
-> Caption: *"Stesso contenuto, stessa ricevuta. Prima della revoca: ✓. Dopo: ✗ in tempo reale."*
+> **Media pronti** (in `docs/media/`, brand Vouchsafe, registrati dal vivo):
+> - `demo.mp4` (494KB) — **media principale**, allega come VIDEO nativo: mandato valido → fuori-scope rifiutato → **revoca → reject in tempo reale**. (LinkedIn preferisce l'MP4 alla GIF: autoplay, qualità migliore.)
+> - `demo-receipt.mp4` (422KB) — il Pilastro 2: contenuto + ricevuta valida → revochi → **REVOCATA all'istante**.
+> - GIF equivalenti (`demo.gif`, `demo-receipt.gif`) + 3 PNG (`01-valid`, `02-scope-denied`, `03-revoked`) per il carosello.
+> Caption video: *"Stesso agente, stesso mandato. Prima della revoca: ✓ eseguito. Dopo: ✗ rifiutato in tempo reale."*
+>
+> **Link** (mettili nel PRIMO COMMENTO, non nel corpo — LinkedIn penalizza i link nel post):
+> - Repo: https://github.com/lorenzotalamucci0-stack/vouchsafe
+> - Demo: https://vouchsafe-production.up.railway.app (explainer + dev docs; la passkey interattiva gira sul dominio ufficiale, qui c'è il video)
 
 ## Hook (scegline uno)
 1. *Un agente AI ha scritto questo. Chi l'ha autorizzato — ed è ancora valido?*
