@@ -26,3 +26,5 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+video/node_modules
+video/out
